@@ -91,11 +91,11 @@ class KotlinModule(
         }
     }
 
-    private fun dependsOn(libraryUnit: KotlinModule) {
-        classpath += libraryUnit.classesDir
-        classpath += libraryUnit.classpath
+    private fun dependsOn(module: KotlinModule) {
+        classpath += module.classesDir
+        classpath += module.classpath
 
-        dependencies += libraryUnit
+        dependencies += module
     }
 
     private fun setupArgs() {
