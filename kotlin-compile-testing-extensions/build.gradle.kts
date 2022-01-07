@@ -4,9 +4,6 @@ plugins {
     id("com.vanniktech.maven.publish")
 }
 
-group = "com.bennyhuo.kotlin"
-version = "1.0"
-
 dependencies {
     implementation("com.google.devtools.ksp:symbol-processing-api:1.6.0-1.0.1")
 
