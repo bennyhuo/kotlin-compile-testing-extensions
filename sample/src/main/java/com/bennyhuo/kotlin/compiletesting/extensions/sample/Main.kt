@@ -1,4 +1,4 @@
-package com.bennyhuo.kotlin.kotlincompiletestingextensions.sample
+package com.bennyhuo.kotlin.compiletesting.extensions.sample
 
 import org.slf4j.LoggerFactory
 
