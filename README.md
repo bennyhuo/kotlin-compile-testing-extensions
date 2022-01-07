@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation("com.bennyhuo.kotlin:kotlin-compile-testing-extensions:0.1")
+    testImplementation("com.bennyhuo.kotlin:kotlin-compile-testing-extensions:0.2")
 }
 ```
 
