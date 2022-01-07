@@ -1,77 +1,66 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.module
 
 import com.bennyhuo.kotlin.compiletesting.extensions.source.SourceModuleInfo
+import com.bennyhuo.kotlin.compiletesting.ksp.kspArgs
+import com.bennyhuo.kotlin.compiletesting.ksp.kspSourcesDir
+import com.bennyhuo.kotlin.compiletesting.ksp.kspWithCompilation
+import com.bennyhuo.kotlin.compiletesting.ksp.symbolProcessorProviders
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
-import com.tschuchort.compiletesting.*
+import com.tschuchort.compiletesting.KotlinCompilation
+import com.tschuchort.compiletesting.SourceFile
+import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import java.io.File
 import javax.annotation.processing.AbstractProcessor
 
-/**
- * Created by benny.
- */
-abstract class KotlinModule(
+class KotlinModule(
     val name: String,
     val args: Map<String, String>,
     val sourceFiles: List<SourceFile>,
-    val dependencyNames: List<String>
+    val dependencyNames: List<String>,
+    componentRegistrars: Collection<ComponentRegistrar> = emptyList(),
+    kaptProcessors: Collection<AbstractProcessor> = emptyList(),
+    kspProcessorProviders: Collection<SymbolProcessorProvider> = emptyList()
 ) {
+    constructor(
+        sourceModuleInfo: SourceModuleInfo,
+        componentRegistrars: Collection<ComponentRegistrar> = emptyList(),
+        kaptProcessors: Collection<AbstractProcessor> = emptyList(),
+        kspProcessorProviders: Collection<SymbolProcessorProvider> = emptyList()
+    ) : this(
+        sourceModuleInfo.name,
+        sourceModuleInfo.args,
+        sourceModuleInfo.sourceFileInfos.map { sourceFileInfo ->
+            SourceFile.new(sourceFileInfo.fileName, sourceFileInfo.sourceBuilder.toString())
+        },
+        sourceModuleInfo.dependencies,
+        componentRegistrars, kaptProcessors, kspProcessorProviders
+    )
 
-    companion object {
-        fun create(sourceModuleInfo: SourceModuleInfo, vararg kspProcessorProviders: SymbolProcessorProvider): KotlinModule {
-            return KspKotlinModule(
-                sourceModuleInfo.name,
-                sourceModuleInfo.args,
-                sourceModuleInfo.sourceFileInfos.map { sourceFileInfo ->
-                    SourceFile.new(sourceFileInfo.fileName, sourceFileInfo.sourceBuilder.toString())
-                },
-                sourceModuleInfo.dependencies,
-                *kspProcessorProviders
-            )
-        }
-
-        fun create(sourceModuleInfo: SourceModuleInfo, vararg kaptProcessors: AbstractProcessor): KotlinModule {
-            return KaptKotlinModule(
-                sourceModuleInfo.name,
-                sourceModuleInfo.args,
-                sourceModuleInfo.sourceFileInfos.map { sourceFileInfo ->
-                    SourceFile.new(sourceFileInfo.fileName, sourceFileInfo.sourceBuilder.toString())
-                },
-                sourceModuleInfo.dependencies,
-                *kaptProcessors
-            )
-        }
+    private val compilation = KotlinCompilation().also { compilation ->
+        compilation.inheritClassPath = true
+        compilation.classpaths = classpath
+        compilation.sources = sourceFiles
+        compilation.moduleName = name
     }
 
-    val classpaths = ArrayList<File>()
+    private val classesDir: File = compilation.classesDir
+
+    private val classpath = ArrayList<File>()
 
     val dependencies = ArrayList<KotlinModule>()
 
     var isCompiled = false
+        private set
 
     var compileResult: KotlinCompilation.Result? = null
 
-    abstract val generatedSourceDir: File
+    val generatedSourceDirs: List<File> = listOf(compilation.kaptSourceDir, compilation.kspSourcesDir)
 
-    abstract val classesDir: File
-
-    protected abstract fun setupArgs()
-
-    protected val compilation = newCompilation().also {
-        it.sources = sourceFiles
-    }
-
-    protected fun newCompilation(): KotlinCompilation {
-        return KotlinCompilation().also { compilation ->
-            compilation.inheritClassPath = true
-            compilation.classpaths = classpaths
-        }
-    }
-
-    private fun dependsOn(libraryUnit: KotlinModule) {
-        classpaths += libraryUnit.classesDir
-        classpaths += libraryUnit.classpaths
-
-        dependencies += libraryUnit
+    init {
+        compilation.compilerPlugins += componentRegistrars
+        compilation.annotationProcessors += kaptProcessors
+        compilation.symbolProcessorProviders += kspProcessorProviders
+        compilation.kspWithCompilation = true
     }
 
     fun addSourceFiles(sourceFiles: List<SourceFile>) {
@@ -86,7 +75,7 @@ abstract class KotlinModule(
         }
     }
 
-    open fun compile() {
+    fun compile() {
         if (isCompiled) return
         ensureDependencies()
 
@@ -102,7 +91,18 @@ abstract class KotlinModule(
         }
     }
 
+    private fun dependsOn(libraryUnit: KotlinModule) {
+        classpath += libraryUnit.classesDir
+        classpath += libraryUnit.classpath
+
+        dependencies += libraryUnit
+    }
+
+    private fun setupArgs() {
+        compilation.kaptArgs.putAll(args)
+        compilation.kspArgs.putAll(args)
+    }
+
     override fun toString() =
         "$name: $isCompiled >> ${compileResult?.exitCode} ${compileResult?.messages}"
-
 }
