@@ -7,13 +7,13 @@ import java.io.File
  */
 private const val SOURCE_START_LINE = "// SOURCE"
 private const val GENERATED_START_LINE = "// GENERATED"
-private val FILE_NAME_PATTERN = Regex("""// FILE: ((\w+)\.(\w+))\s*""")
+private val FILE_NAME_PATTERN = Regex("""// FILE: ((\w+)\.(\w+))\s*(\[(\S*)#(\S*)])?""")
 private val MODULE_NAME_PATTERN = Regex("""// MODULE: ([-\w]+)(\s*/\s*(([-\w]+)(\s*,\s*([-\w]+))*))?\s*(#(.*))?""")
 
 private const val DEFAULT_MODULE = "default-module"
 private const val DEFAULT_FILE = "DefaultFile.kt"
 
-class SingleFileModuleInfoLoader(private val filePath: String): ModuleInfoLoader {
+class SingleFileModuleInfoLoader(private val filePath: String) : ModuleInfoLoader {
 
     private val lines by lazy {
         File(filePath).readLines().dropWhile { it.trim() != SOURCE_START_LINE }
@@ -25,10 +25,6 @@ class SingleFileModuleInfoLoader(private val filePath: String): ModuleInfoLoader
 
     private val expectLines by lazy {
         lines.dropWhile { it.trim() != GENERATED_START_LINE }.drop(1)
-    }
-
-    private fun handleNewModule() {
-
     }
 
     override fun loadSourceModuleInfos(): Collection<SourceModuleInfo> {
@@ -49,19 +45,21 @@ class SingleFileModuleInfoLoader(private val filePath: String): ModuleInfoLoader
                     currentModule.sourceFileInfos.last().sourceBuilder.append(line).appendLine()
                 } else {
                     // find new source file
-                    moduleInfos.last().sourceFileInfos += SourceFileInfo(result.groupValues[1])
+                    val currentModule = moduleInfos.last()
+                    currentModule.sourceFileInfos += SourceFileInfo(result.groupValues[1])
+
+                    if (result.groupValues[5].isNotBlank() && result.groupValues[6].isNotBlank()) {
+                        currentModule.entries += Entry(result.groupValues[5], result.groupValues[6])
+                    }
                 }
             } else {
-                val dependencies = if (moduleResult.groupValues.size > 4) {
-                    moduleResult.groupValues[3].split(",")
-                        .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
-                } else emptyList()
+                val dependencies = moduleResult.groupValues[3].split(",")
+                    .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
 
-                val args = if (moduleResult.groupValues.size > 8) {
-                    moduleResult.groupValues[8].split(",").mapNotNull {
-                        it.trim().split(":").takeIf { it.size == 2 }
-                    }.associate { it[0] to it[1] }
-                } else emptyMap()
+                val args = moduleResult.groupValues[8].split(",").mapNotNull {
+                    it.trim().split(":").takeIf { it.size == 2 }
+                }.associate { it[0] to it[1] }
+
 
                 moduleInfos += SourceModuleInfo(
                     name = moduleResult.groupValues[1],

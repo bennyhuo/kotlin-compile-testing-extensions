@@ -4,7 +4,8 @@ class SourceModuleInfo(
     val name: String,
     val args: Map<String, String> = emptyMap(),
     val dependencies: List<String> = emptyList(),
-    val sourceFileInfos: MutableList<SourceFileInfo> = ArrayList()
+    val sourceFileInfos: MutableList<SourceFileInfo> = ArrayList(),
+    val entries: MutableList<Entry> = ArrayList()
 )
 
 class ExpectModuleInfo(
@@ -17,5 +18,11 @@ class SourceFileInfo(val fileName: String) {
 
     override fun toString(): String {
         return "$fileName: \n$sourceBuilder"
+    }
+}
+
+class Entry(val className: String, val functionName: String) {
+    override fun toString(): String {
+        return "$className#$functionName"
     }
 }
