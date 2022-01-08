@@ -1,6 +1,8 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.module
 
+import com.bennyhuo.kotlin.compiletesting.extensions.source.Entry
 import com.bennyhuo.kotlin.compiletesting.extensions.source.SourceModuleInfo
+import com.bennyhuo.kotlin.compiletesting.extensions.utils.captureStdOut
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
@@ -9,6 +11,8 @@ import com.tschuchort.compiletesting.kspSourcesDir
 import com.tschuchort.compiletesting.symbolProcessorProviders
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import java.io.File
+import java.lang.reflect.Modifier
+import java.net.URLClassLoader
 import javax.annotation.processing.AbstractProcessor
 
 class KotlinModule(
@@ -16,6 +20,7 @@ class KotlinModule(
     args: Map<String, String>,
     val sourceFiles: List<SourceFile>,
     val dependencyNames: List<String>,
+    val entries: List<Entry>,
     componentRegistrars: Collection<ComponentRegistrar> = emptyList(),
     kaptProcessors: Collection<AbstractProcessor> = emptyList(),
     kspProcessorProviders: Collection<SymbolProcessorProvider> = emptyList()
@@ -32,26 +37,18 @@ class KotlinModule(
             SourceFile.new(sourceFileInfo.fileName, sourceFileInfo.sourceBuilder.toString())
         },
         sourceModuleInfo.dependencies,
+        sourceModuleInfo.entries,
         componentRegistrars, kaptProcessors, kspProcessorProviders
     )
 
     private val classpath = ArrayList<File>()
 
-    private val compilation = KotlinCompilation().also { compilation ->
-        compilation.inheritClassPath = true
-        compilation.classpaths = classpath
-        compilation.sources = sourceFiles
-        compilation.moduleName = name
-    }
+    private val compilation = newCompilation()
 
     private val kspCompilation = if (kspProcessorProviders.isNotEmpty()) {
-        KotlinCompilation().also { compilation ->
-            compilation.inheritClassPath = true
-            compilation.classpaths = classpath
-            compilation.sources = sourceFiles
-            compilation.moduleName = name
-            compilation.symbolProcessorProviders += kspProcessorProviders
-            compilation.kspArgs.putAll(args)
+        newCompilation {
+            symbolProcessorProviders = kspProcessorProviders.toList()
+            kspArgs.putAll(args)
         }
     } else {
         null
@@ -77,7 +74,6 @@ class KotlinModule(
 
         compilation.annotationProcessors += kaptProcessors
         compilation.kaptArgs.putAll(args)
-
     }
 
     fun resolveDependencies(kotlinModuleMap: Map<String, KotlinModule>) {
@@ -110,6 +106,32 @@ class KotlinModule(
         compileResult = compilation.compile()
     }
 
+    fun runJvm(): Map<String, String> {
+        if (!isCompiled) {
+            compile()
+        }
+
+        if (entries.isEmpty()) {
+            return emptyMap()
+        }
+
+        val classLoader = URLClassLoader(
+            (classpath + classesDir).map { it.toURI().toURL() }.toTypedArray(),
+            this.javaClass.classLoader
+        )
+
+        return entries.associate {
+            "$it" to captureStdOut {
+                val entryClass = classLoader.loadClass(it.className)
+                val entryFunction = entryClass.getDeclaredMethod(it.functionName)
+                if (!Modifier.isStatic(entryFunction.modifiers)) {
+                    throw IllegalArgumentException("entry function $entryFunction must be static.")
+                }
+                entryFunction.invoke(null)
+            }
+        }
+    }
+
     private fun ensureDependencies() {
         dependencies.forEach {
             it.compile()
@@ -120,6 +142,16 @@ class KotlinModule(
 
     private fun dependsOn(module: KotlinModule) {
         dependencies += module
+    }
+
+    private fun newCompilation(block: KotlinCompilation.() -> Unit = {}) = KotlinCompilation().also { compilation ->
+        compilation.verbose = false
+        compilation.inheritClassPath = true
+        compilation.classpaths = classpath
+        compilation.sources = sourceFiles
+        compilation.moduleName = name
+
+        compilation.block()
     }
 
     override fun toString() =
