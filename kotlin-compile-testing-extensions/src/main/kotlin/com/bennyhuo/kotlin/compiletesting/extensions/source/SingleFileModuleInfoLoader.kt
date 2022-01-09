@@ -49,7 +49,11 @@ class SingleFileModuleInfoLoader(private val filePath: String) : ModuleInfoLoade
                     currentModule.sourceFileInfos += SourceFileInfo(result.groupValues[1])
 
                     if (result.groupValues[5].isNotBlank() && result.groupValues[6].isNotBlank()) {
-                        currentModule.entries += Entry(result.groupValues[5], result.groupValues[6])
+                        currentModule.entries += Entry(
+                            result.groupValues[1],
+                            result.groupValues[5],
+                            result.groupValues[6]
+                        )
                     }
                 }
             } else {

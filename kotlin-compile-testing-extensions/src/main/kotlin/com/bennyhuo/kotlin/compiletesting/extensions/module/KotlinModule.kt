@@ -121,7 +121,7 @@ class KotlinModule(
         )
 
         return entries.associate {
-            "$it" to captureStdOut {
+            it.fileName to captureStdOut {
                 val entryClass = classLoader.loadClass(it.className)
                 val entryFunction = entryClass.getDeclaredMethod(it.functionName)
                 if (!Modifier.isStatic(entryFunction.modifiers)) {
