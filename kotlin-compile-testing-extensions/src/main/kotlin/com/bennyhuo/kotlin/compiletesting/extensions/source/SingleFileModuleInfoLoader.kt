@@ -7,7 +7,7 @@ import java.io.File
  */
 private const val SOURCE_START_LINE = "// SOURCE"
 private const val GENERATED_START_LINE = "// GENERATED"
-private val FILE_NAME_PATTERN = Regex("""// FILE: ((\w+)\.(\w+))\s*(\[(\S*)#(\S*)])?""")
+private val FILE_NAME_PATTERN = Regex("""// FILE: (([$\w]+)\.([$\w]+))\s*(\[(\S*)#(\S*)])?""")
 private val MODULE_NAME_PATTERN = Regex("""// MODULE: ([-\w]+)(\s*/\s*(([-\w]+)(\s*,\s*([-\w]+))*))?\s*(#(.*))?""")
 
 private const val DEFAULT_MODULE = "default-module"
