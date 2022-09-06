@@ -36,6 +36,9 @@ class ResultCollector {
     }
 
     fun apply() {
-        assertEquals(expect.toString(), actual.toString())
+        assertEquals(
+            expect.toString().replace("\r\n", "\n"),
+            actual.toString().replace("\r\n", "\n")
+        )
     }
 }
