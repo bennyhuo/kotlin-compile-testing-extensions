@@ -5,10 +5,10 @@ plugins {
 }
 
 dependencies {
-    api("com.github.tschuchortdev:kotlin-compile-testing:1.4.7")
-    api("com.github.tschuchortdev:kotlin-compile-testing-ksp:1.4.7")
+    api("com.github.tschuchortdev:kotlin-compile-testing:1.4.9")
+    api("com.github.tschuchortdev:kotlin-compile-testing-ksp:1.4.9")
 
-    api("com.google.devtools.ksp:symbol-processing-api:1.6.10-1.0.2")
+    api("com.google.devtools.ksp:symbol-processing-api:1.7.10-1.0.6")
 
     implementation(kotlin("test-common"))
     implementation(kotlin("test-annotations-common"))

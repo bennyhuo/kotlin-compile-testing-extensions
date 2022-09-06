@@ -4,12 +4,13 @@ buildscript {
         maven("https://mirrors.tencent.com/nexus/repository/maven-public/")
     }
     dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10")
-
-        classpath("com.vanniktech:gradle-maven-publish-plugin:0.14.2")
-        // For Kotlin projects, you need to add Dokka.
-        classpath("org.jetbrains.dokka:dokka-gradle-plugin:0.10.1")
+        classpath("com.vanniktech:gradle-maven-publish-plugin:0.18.0")
     }
+}
+
+plugins {
+    kotlin("jvm") version "1.7.10" apply false
+    id("org.jetbrains.dokka") version "1.7.10" apply false
 }
 
 subprojects {
