@@ -14,3 +14,5 @@ dependencies {
     implementation(kotlin("test-annotations-common"))
     implementation(kotlin("test-junit"))
 }
+
+java.sourceCompatibility = JavaVersion.VERSION_1_8
