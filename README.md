@@ -27,6 +27,12 @@ dependencies {
 
 See the tests in [bennyhuo/Mixin](https://github.com/bennyhuo/Mixin/tree/master/compiler/).
 
+## ChangeLog
+
+### 1.7.10.1
+
+* Compatible with Java 8/Kotlin 1.7.10.
+
 # License
 
 [MIT License](https://github.com/bennyhuo/kotlin-compile-testing-extensions/blob/master/LICENSE)
