@@ -4,11 +4,7 @@ import com.bennyhuo.kotlin.compiletesting.extensions.source.Entry
 import com.bennyhuo.kotlin.compiletesting.extensions.source.SourceModuleInfo
 import com.bennyhuo.kotlin.compiletesting.extensions.utils.captureStdOut
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
-import com.tschuchort.compiletesting.KotlinCompilation
-import com.tschuchort.compiletesting.SourceFile
-import com.tschuchort.compiletesting.kspArgs
-import com.tschuchort.compiletesting.kspSourcesDir
-import com.tschuchort.compiletesting.symbolProcessorProviders
+import com.tschuchort.compiletesting.*
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import java.io.File
 import java.lang.reflect.Modifier
@@ -109,6 +105,10 @@ class KotlinModule(
     fun runJvm(): Map<String, String> {
         if (!isCompiled) {
             compile()
+        }
+
+        if (compileResult?.exitCode != KotlinCompilation.ExitCode.OK) {
+            return emptyMap()
         }
 
         if (entries.isEmpty()) {
