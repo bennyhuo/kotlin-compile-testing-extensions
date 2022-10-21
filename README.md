@@ -29,6 +29,10 @@ See the tests in [bennyhuo/Mixin](https://github.com/bennyhuo/Mixin/tree/master/
 
 ## ChangeLog
 
+### 1.7.10.2
+
+* Add support to check module results.
+
 ### 1.7.10.1
 
 * Compatible with Java 8/Kotlin 1.7.10.

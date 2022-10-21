@@ -14,10 +14,13 @@ class ExpectModuleInfo(
 )
 
 class SourceFileInfo(val fileName: String) {
-    val sourceBuilder = StringBuilder()
+    internal val sourceBuilder = StringBuilder()
+
+    val content: String
+        get() = sourceBuilder.toString().trimEnd()
 
     override fun toString(): String {
-        return "$fileName: \n$sourceBuilder"
+        return "$fileName: \n${sourceBuilder}"
     }
 }
 
