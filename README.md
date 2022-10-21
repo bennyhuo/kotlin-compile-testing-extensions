@@ -29,7 +29,7 @@ See the tests in [bennyhuo/Mixin](https://github.com/bennyhuo/Mixin/tree/master/
 
 ## ChangeLog
 
-### 1.7.10.2
+### 1.7.10.2-SNAPSHOT
 
 * Add support to check module results.
 
