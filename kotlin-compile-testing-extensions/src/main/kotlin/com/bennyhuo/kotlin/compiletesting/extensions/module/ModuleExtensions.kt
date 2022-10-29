@@ -26,6 +26,7 @@ fun KotlinModule.checkResult(
     checkExitCode: Boolean = true,
     executeEntries: Boolean = false,
     checkGeneratedFiles: Boolean = false,
+    checkGeneratedIr: Boolean = false,
     checkCompilerOutput: Boolean = false,
     compilerOutputName: String = "compiles.log",
     compilerOutputLevel: Int = LEVEL_ERROR
@@ -35,6 +36,7 @@ fun KotlinModule.checkResult(
         checkExitCode,
         executeEntries,
         checkGeneratedFiles,
+        checkGeneratedIr,
         checkCompilerOutput,
         compilerOutputName,
         compilerOutputLevel
@@ -46,6 +48,7 @@ fun Collection<KotlinModule>.checkResult(
     checkExitCode: Boolean = true,
     executeEntries: Boolean = false,
     checkGeneratedFiles: Boolean = false,
+    checkGeneratedIr: Boolean = false,
     checkCompilerOutput: Boolean = false,
     compilerOutputName: String = "compiles.log",
     compilerOutputLevel: Int = LEVEL_ERROR

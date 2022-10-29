@@ -1,5 +1,6 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.module
 
+import com.bennyhuo.kotlin.compiletesting.extensions.ir.IrSourcePrinterRegistrar
 import com.bennyhuo.kotlin.compiletesting.extensions.source.Entry
 import com.bennyhuo.kotlin.compiletesting.extensions.source.SourceModuleInfo
 import com.bennyhuo.kotlin.compiletesting.extensions.utils.captureStdOut
@@ -65,8 +66,14 @@ class KotlinModule(
         kspCompilation?.kspSourcesDir
     )
 
+    val irTransformedSourceDir: File = compilation.workingDir.resolve("ir")
+
+    private val sourcePrinter = IrSourcePrinterRegistrar(irTransformedSourceDir)
+
     init {
-        compilation.compilerPlugins += componentRegistrars
+        if (componentRegistrars.isNotEmpty()) {
+            compilation.compilerPlugins += componentRegistrars + sourcePrinter
+        }
 
         compilation.annotationProcessors += kaptProcessors
         compilation.kaptArgs.putAll(args)
@@ -98,6 +105,8 @@ class KotlinModule(
                     SourceFile.new(it.name, it.readText())
                 }
         }
+
+
 
         compileResult = compilation.compile()
     }
