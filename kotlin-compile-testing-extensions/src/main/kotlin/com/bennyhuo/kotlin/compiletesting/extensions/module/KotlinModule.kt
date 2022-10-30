@@ -1,9 +1,11 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.module
 
 import com.bennyhuo.kotlin.compiletesting.extensions.ir.IrSourcePrinterRegistrar
+import com.bennyhuo.kotlin.compiletesting.extensions.ir.escapeCharacters
 import com.bennyhuo.kotlin.compiletesting.extensions.source.Entry
 import com.bennyhuo.kotlin.compiletesting.extensions.source.SourceModuleInfo
 import com.bennyhuo.kotlin.compiletesting.extensions.utils.captureStdOut
+import com.bennyhuo.kotlin.compiletesting.extensions.utils.readTextAndUnify
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import com.tschuchort.compiletesting.*
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
@@ -68,7 +70,7 @@ class KotlinModule(
 
     val irTransformedSourceDir: File = compilation.workingDir.resolve("ir")
 
-    private val sourcePrinter = IrSourcePrinterRegistrar(irTransformedSourceDir)
+    internal val sourcePrinter = IrSourcePrinterRegistrar(irTransformedSourceDir)
 
     init {
         if (componentRegistrars.isNotEmpty()) {
@@ -102,11 +104,9 @@ class KotlinModule(
             compilation.sources += kspCompilation.kspSourcesDir.walkTopDown()
                 .filter { !it.isDirectory }
                 .map {
-                    SourceFile.new(it.name, it.readText())
+                    SourceFile.new(it.name, it.readTextAndUnify())
                 }
         }
-
-
 
         compileResult = compilation.compile()
     }
@@ -130,7 +130,7 @@ class KotlinModule(
         )
 
         return entries.associate {
-            it.fileName to captureStdOut {
+            "${it.fileName}.stdout" to captureStdOut {
                 val entryClass = classLoader.loadClass(it.className)
                 val entryFunction = entryClass.getDeclaredMethod(it.functionName)
                 if (!Modifier.isStatic(entryFunction.modifiers)) {

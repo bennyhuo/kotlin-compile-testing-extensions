@@ -21,7 +21,25 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.IrBuiltIns
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
-import org.jetbrains.kotlin.ir.declarations.*
+import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
+import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrConstructor
+import org.jetbrains.kotlin.ir.declarations.IrDeclaration
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationWithName
+import org.jetbrains.kotlin.ir.declarations.IrField
+import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.declarations.IrLocalDelegatedProperty
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrPackageFragment
+import org.jetbrains.kotlin.ir.declarations.IrProperty
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.declarations.IrTypeAlias
+import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
+import org.jetbrains.kotlin.ir.declarations.IrValueParameter
+import org.jetbrains.kotlin.ir.declarations.IrVariable
+import org.jetbrains.kotlin.ir.declarations.name
 import org.jetbrains.kotlin.ir.expressions.IrBlock
 import org.jetbrains.kotlin.ir.expressions.IrBlockBody
 import org.jetbrains.kotlin.ir.expressions.IrBranch
@@ -80,6 +98,7 @@ import org.jetbrains.kotlin.ir.types.IrTypeProjection
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.isAny
 import org.jetbrains.kotlin.ir.types.isInt
+import org.jetbrains.kotlin.ir.types.isMarkedNullable
 import org.jetbrains.kotlin.ir.types.isNullableAny
 import org.jetbrains.kotlin.ir.types.isUnit
 import org.jetbrains.kotlin.ir.util.isAnnotationClass
@@ -89,15 +108,14 @@ import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.ir.util.primaryConstructor
 import org.jetbrains.kotlin.ir.util.statements
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.resolve.descriptorUtil.isAnnotationConstructor
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.Printer
 import java.util.Locale
 import kotlin.math.abs
-import org.jetbrains.kotlin.ir.types.isMarkedNullable
-import org.jetbrains.kotlin.ir.visitors.acceptVoid
 
-fun IrElement.dumpSrc(): String {
+internal fun IrElement.dumpSrc(): String {
     val sb = StringBuilder()
     accept(IrSourcePrinterVisitor(sb, "%tab%"), null)
     return sb
@@ -115,7 +133,7 @@ fun IrElement.dumpSrc(): String {
         .replace(Regex("}\\n(\\s)*,", RegexOption.MULTILINE), "},")
 }
 
-class IrSourcePrinterVisitor(
+internal class IrSourcePrinterVisitor(
     out: Appendable,
     indentUnit: String = "  ",
 ) : IrElementVisitorVoid {
@@ -156,15 +174,17 @@ class IrSourcePrinterVisitor(
     }
 
     override fun visitPackageFragment(declaration: IrPackageFragment) {
-        println("package ${declaration.fqName.asString()}")
-        println()
+        if (declaration.fqName != FqName.ROOT) {
+            println("package ${declaration.fqName.asString()}")
+            println()
+        }
     }
 
     override fun visitFile(declaration: IrFile) {
         includeFileNameInExceptionTrace(declaration) {
           // println("// FILE: ${declaration.fileEntry.name}")
+            visitPackageFragment(declaration)
             declaration.declarations.printJoin("\n")
-            """\b\r\n"""
             "\r\b\n"
         }
     }
@@ -623,24 +643,35 @@ class IrSourcePrinterVisitor(
 
     override fun visitStringConcatenation(expression: IrStringConcatenation) {
         val arguments = expression.arguments
-        print("\"")
-        for (arg in arguments) {
+        val rawStringPreferred = arguments.mapNotNull {
+            (it as? IrConst<*>)?.value?.toString()?.rawStringPreferred()
+        }.let {
+            it.isNotEmpty() && it.all { it }
+        }
+
+        val quote = if (rawStringPreferred) "\"\"\"" else "\""
+        print(quote)
+        for (argument in arguments) {
             when {
-                arg is IrConst<*> && arg.kind == IrConstKind.String -> {
-                    print(StringUtil.escapeCharCharacters(arg.value.toString()))
+                argument is IrConst<*> && argument.kind == IrConstKind.String -> {
+                    if (rawStringPreferred) {
+                        print(argument.value.toString())
+                    } else {
+                        print(argument.value.toString().escapeCharacters())
+                    }
                 }
-                arg is IrGetValue -> {
+                argument is IrGetValue -> {
                     print("$")
-                    arg.print()
+                    argument.print()
                 }
                 else -> {
                     print("\${")
-                    arg.print()
+                    argument.print()
                     print("}")
                 }
             }
         }
-        print("\"")
+        print(quote)
     }
 
     override fun visitVararg(expression: IrVararg) {
@@ -1012,7 +1043,12 @@ class IrSourcePrinterVisitor(
             is IrConstKind.Float -> "${expression.value}f"
             is IrConstKind.Double -> "${expression.value}"
             is IrConstKind.String -> {
-                "\"${StringUtil.escapeCharCharacters(expression.value.toString())}\""
+                val value = expression.value.toString()
+                if (value.rawStringPreferred() == true) {
+                    "\"\"\"$value\"\"\""
+                } else {
+                    "\"${StringUtil.escapeCharCharacters(expression.value.toString())}\""
+                }
             }
         }
         print(result)
@@ -1479,7 +1515,7 @@ private inline fun <T> StringBuilder.appendListWith(
     append(postfix)
 }
 
-inline fun <T> includeFileNameInExceptionTrace(file: IrFile, body: () -> T): T {
+private inline fun <T> includeFileNameInExceptionTrace(file: IrFile, body: () -> T): T {
     try {
         return body()
     } catch (e: Exception) {

@@ -3,9 +3,7 @@ package com.bennyhuo.kotlin.compiletesting.extensions.module
 import com.tschuchort.compiletesting.KotlinCompilation
 import java.io.File
 
-const val LEVEL_INFO = 1
-const val LEVEL_WARN = 2
-const val LEVEL_ERROR = 3
+
 
 private val compileLogPattern = Regex("([iew]): .*/(.*): \\((\\d+), (\\d+)\\): (.*)")
 
@@ -31,9 +29,9 @@ class CompilerOutput(
 
     fun filterOutputs(level: Int) = CompilerOutput(code, outputs.filter { it.levelInt == level })
 
-    fun errors() = filterOutputs(LEVEL_ERROR)
-    fun infos() = filterOutputs(LEVEL_INFO)
-    fun warns() = filterOutputs(LEVEL_WARN)
+    fun errors() = filterOutputs(COMPILER_OUTPUT_LEVEL_ERROR)
+    fun infos() = filterOutputs(COMPILER_OUTPUT_LEVEL_INFO)
+    fun warns() = filterOutputs(COMPILER_OUTPUT_LEVEL_WARN)
 
     override fun toString(): String {
         return if (outputs.isEmpty()) code.toString()
@@ -50,10 +48,10 @@ class CompilerOutputLine(
 ) {
 
     val levelInt = when (level) {
-        "i" -> LEVEL_INFO
-        "w" -> LEVEL_WARN
-        "e" -> LEVEL_ERROR
-        else -> LEVEL_INFO
+        "i" -> COMPILER_OUTPUT_LEVEL_INFO
+        "w" -> COMPILER_OUTPUT_LEVEL_WARN
+        "e" -> COMPILER_OUTPUT_LEVEL_ERROR
+        else -> COMPILER_OUTPUT_LEVEL_INFO
     }
 
     override fun toString() = "$level: ${File(path).name}: ($offsetStart, $offsetEnd): $message"
