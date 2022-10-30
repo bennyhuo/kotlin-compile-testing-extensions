@@ -1,5 +1,7 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.ir
 
+import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_TYPE_KOTLIN_LIKE
+import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_TYPE_KOTLIN_LIKE_JC
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.com.intellij.mock.MockProject
@@ -7,45 +9,53 @@ import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.name
+import org.jetbrains.kotlin.ir.util.KotlinLikeDumpOptions
 import org.jetbrains.kotlin.ir.util.dump
-import org.jetbrains.kotlin.ir.util.getPackageFragment
-import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.ir.util.dumpKotlinLike
 import java.io.File
 
 /**
  * Created by benny.
  */
-class IrSourcePrinterRegistrar(outputDir: File) : ComponentRegistrar {
+internal class IrSourcePrinterRegistrar(outputDir: File) : ComponentRegistrar {
 
     private val extension = IrSourcePrinterExtension(outputDir)
 
+    var isEnabled: Boolean = false
+
+    var type: Int
+        set(value) {
+            extension.type = value
+        }
+        get() = extension.type
+
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
-        IrGenerationExtension.registerExtension(project, extension)
+        if (isEnabled) {
+            IrGenerationExtension.registerExtension(project, extension)
+        }
     }
 }
 
 class IrSourcePrinterExtension(private val outputDir: File) : IrGenerationExtension {
 
-    init {
-        println(outputDir)
-    }
+    var type: Int = IR_OUTPUT_TYPE_KOTLIN_LIKE_JC
 
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
         moduleFragment.files.forEach { irFile ->
-            val irPackage = irFile.getPackageFragment()
-            val packageName = irPackage?.fqName?.asString() ?: ""
-            val packageDir = outputDir.resolve(packageName.replace('.', File.separatorChar))
-            packageDir.mkdirs()
-
-
-            packageDir.resolve("${irFile.name}.ir").writer().use {
-                if (irPackage?.fqName != FqName.ROOT) {
-                    it.appendLine("package $packageName")
+            outputDir.resolve(irFile.fqName.asString().replace('.', File.separatorChar)).run {
+                mkdirs()
+                val source = when(type) {
+                    IR_OUTPUT_TYPE_KOTLIN_LIKE_JC -> irFile.dumpSrc()
+                    IR_OUTPUT_TYPE_KOTLIN_LIKE -> irFile.dumpKotlinLike(KotlinLikeDumpOptions(
+                        printFileName = false,
+                        printFilePath = false
+                    ))
+                    else -> irFile.dump()
                 }
-                it.write(irFile.dumpSrc())
-            }
 
-            println(irFile.dump())
+                resolve("${irFile.name}.ir").writeText(source)
+                irFile.dumpKotlinLike()
+            }
         }
     }
 }
