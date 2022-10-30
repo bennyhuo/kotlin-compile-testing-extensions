@@ -6,7 +6,7 @@ import java.io.File
  * Created by benny at 2022/1/7 10:29 AM.
  */
 private const val SOURCE_START_LINE = "// SOURCE"
-private const val GENERATED_START_LINE = "// GENERATED"
+private const val EXPECT_START_LINE = "// EXPECT"
 private val FILE_NAME_PATTERN = Regex("""// FILE: (([$\w.]+)\.([$\w]+))\s*(\[(\S*)#(\S*)])?""")
 private val MODULE_NAME_PATTERN = Regex("""// MODULE: ([-\w]+)(\s*/\s*(([-\w]+)(\s*,\s*([-\w]+))*))?\s*(#(.*))?""")
 
@@ -23,11 +23,11 @@ class FileBasedModuleInfoLoader(private val filePath: String) : ModuleInfoLoader
     }
 
     private val sourceLines by lazy {
-        lines.takeWhile { it.trim() != GENERATED_START_LINE }.drop(1)
+        lines.takeWhile { it.trim() != EXPECT_START_LINE }.drop(1)
     }
 
     private val expectLines by lazy {
-        lines.dropWhile { it.trim() != GENERATED_START_LINE }.drop(1)
+        lines.dropWhile { it.trim() != EXPECT_START_LINE }.drop(1)
     }
 
     override fun loadSourceModuleInfos(): Collection<SourceModuleInfo> {
