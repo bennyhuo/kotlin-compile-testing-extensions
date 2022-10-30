@@ -13,7 +13,10 @@ private val MODULE_NAME_PATTERN = Regex("""// MODULE: ([-\w]+)(\s*/\s*(([-\w]+)(
 private const val DEFAULT_MODULE = "default-module"
 private const val DEFAULT_FILE = "DefaultFile.kt"
 
-class SingleFileModuleInfoLoader(private val filePath: String) : ModuleInfoLoader {
+@Deprecated("Use FileBasedModuleInfoLoader.", ReplaceWith("FileBasedModuleInfoLoader"))
+typealias SingleFileModuleInfoLoader = FileBasedModuleInfoLoader
+
+class FileBasedModuleInfoLoader(private val filePath: String) : ModuleInfoLoader {
 
     private val lines by lazy {
         File(filePath).readLines().dropWhile { it.trim() != SOURCE_START_LINE }
