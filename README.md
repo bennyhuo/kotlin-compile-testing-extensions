@@ -19,7 +19,20 @@ repositories {
 }
 
 dependencies {
-    testImplementation("com.bennyhuo.kotlin:kotlin-compile-testing-extensions:$latestVerson")
+    testImplementation("com.bennyhuo.kotlin:kotlin-compile-testing-extensions:1.7.10.1")
+}
+```
+
+For snapshot:
+
+```
+repositories {
+    ...
+    maven("https://oss.sonatype.org/content/repositories/snapshots/")
+}
+
+dependencies {
+    testImplementation("com.bennyhuo.kotlin:kotlin-compile-testing-extensions:1.7.10.2-SNAPSHOT")
 }
 ```
 
