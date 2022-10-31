@@ -34,6 +34,7 @@ fun KotlinModule.checkResult(
         options.checkGeneratedFiles,
         options.checkGeneratedIr,
         options.irOutputType,
+        options.irSourceIndentSize,
         options.checkCompilerOutput,
         options.compilerOutputName,
         options.compilerOutputLevel,
@@ -51,6 +52,7 @@ fun Collection<KotlinModule>.checkResult(
         options.checkGeneratedFiles,
         options.checkGeneratedIr,
         options.irOutputType,
+        options.irSourceIndentSize,
         options.checkCompilerOutput,
         options.compilerOutputName,
         options.compilerOutputLevel,
@@ -64,6 +66,7 @@ fun KotlinModule.checkResult(
     checkGeneratedFiles: Boolean = false,
     checkGeneratedIr: Boolean = false,
     irOutputType: Int = IR_OUTPUT_TYPE_KOTLIN_LIKE_JC,
+    irSourceIndentSize: Int = 4,
     checkCompilerOutput: Boolean = false,
     compilerOutputName: String = "compiles.log",
     compilerOutputLevel: Int = COMPILER_OUTPUT_LEVEL_ERROR
@@ -75,6 +78,7 @@ fun KotlinModule.checkResult(
         checkGeneratedFiles,
         checkGeneratedIr,
         irOutputType,
+        irSourceIndentSize,
         checkCompilerOutput,
         compilerOutputName,
         compilerOutputLevel
@@ -88,6 +92,7 @@ fun Collection<KotlinModule>.checkResult(
     checkGeneratedFiles: Boolean = false,
     checkGeneratedIr: Boolean = false,
     irOutputType: Int = IR_OUTPUT_TYPE_KOTLIN_LIKE_JC,
+    irSourceIndentSize: Int = 4,
     checkCompilerOutput: Boolean = false,
     compilerOutputName: String = "compiles.log",
     compilerOutputLevel: Int = COMPILER_OUTPUT_LEVEL_ERROR
@@ -100,6 +105,7 @@ fun Collection<KotlinModule>.checkResult(
         forEach {
             it.sourcePrinter.isEnabled = true
             it.sourcePrinter.type = irOutputType
+            it.sourcePrinter.indentSize = irSourceIndentSize
         }
     }
 
