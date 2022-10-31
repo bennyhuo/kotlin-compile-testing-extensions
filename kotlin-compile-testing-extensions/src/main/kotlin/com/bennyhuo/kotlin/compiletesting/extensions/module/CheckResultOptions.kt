@@ -33,6 +33,7 @@ class CheckResultOptions(
     val checkGeneratedFiles: Boolean = false,
     val checkGeneratedIr: Boolean = false,
     val irOutputType: Int = IR_OUTPUT_TYPE_KOTLIN_LIKE_JC,
+    val irSourceIndentSize: Int = 4,
     val checkCompilerOutput: Boolean = false,
     val compilerOutputName: String = "compiles.log",
     val compilerOutputLevel: Int = COMPILER_OUTPUT_LEVEL_ERROR

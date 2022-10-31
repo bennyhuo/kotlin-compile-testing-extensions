@@ -115,15 +115,19 @@ import org.jetbrains.kotlin.utils.Printer
 import java.util.Locale
 import kotlin.math.abs
 
-internal fun IrElement.dumpSrc(): String {
+/**
+ * This is a copied from the Jetpack Compose compiler with a little optimization.
+ */
+internal fun IrElement.dumpSrc(indentSize: Int = 4): String {
+    val indent = (0 until indentSize).fold(StringBuilder()) { acc, i -> acc.append(' ') }.toString()
     val sb = StringBuilder()
-    accept(IrSourcePrinterVisitor(sb, "%tab%"), null)
+    accept(JcIrSourcePrinter(sb, "%tab%"), null)
     return sb
         .toString()
         // replace tabs at beginning of line with white space
         .replace(Regex("\\n(%tab%)+", RegexOption.MULTILINE)) {
             val size = it.range.last - it.range.first - 1
-            "\n" + (0..(size / 5)).joinToString("") { "  " }
+            "\n" + (0..(size / 5)).joinToString("") { indent }
         }
         // tabs that are inserted in the middle of lines should be replaced with empty strings
         .replace(Regex("%tab%", RegexOption.MULTILINE), "")
@@ -133,14 +137,14 @@ internal fun IrElement.dumpSrc(): String {
         .replace(Regex("}\\n(\\s)*,", RegexOption.MULTILINE), "},")
 }
 
-internal class IrSourcePrinterVisitor(
+internal class JcIrSourcePrinter(
     out: Appendable,
     indentUnit: String = "  ",
 ) : IrElementVisitorVoid {
     private val printer = Printer(out, indentUnit)
 
     private fun IrElement.print() {
-        accept(this@IrSourcePrinterVisitor, null)
+        accept(this@JcIrSourcePrinter, null)
     }
     private fun print(obj: Any?) = printer.print(obj)
     private fun println(obj: Any?) = printer.println(obj)
@@ -1489,7 +1493,7 @@ internal class IrSourcePrinterVisitor(
                     renderAsAnnotationArgument(it)
                 }
             }
-            else -> append(irElement.accept(this@IrSourcePrinterVisitor, null))
+            else -> append(irElement.accept(this@JcIrSourcePrinter, null))
         }
     }
 

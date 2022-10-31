@@ -29,6 +29,12 @@ internal class IrSourcePrinterRegistrar(outputDir: File) : ComponentRegistrar {
         }
         get() = extension.type
 
+    var indentSize: Int
+        set(value) {
+            extension.indentSize = value
+        }
+        get() = extension.indentSize
+
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         if (isEnabled) {
             IrGenerationExtension.registerExtension(project, extension)
@@ -39,16 +45,18 @@ internal class IrSourcePrinterRegistrar(outputDir: File) : ComponentRegistrar {
 class IrSourcePrinterExtension(private val outputDir: File) : IrGenerationExtension {
 
     var type: Int = IR_OUTPUT_TYPE_KOTLIN_LIKE_JC
+    var indentSize: Int = 4
 
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
         moduleFragment.files.forEach { irFile ->
             outputDir.resolve(irFile.fqName.asString().replace('.', File.separatorChar)).run {
                 mkdirs()
                 val source = when(type) {
-                    IR_OUTPUT_TYPE_KOTLIN_LIKE_JC -> irFile.dumpSrc()
+                    IR_OUTPUT_TYPE_KOTLIN_LIKE_JC -> irFile.dumpSrc(indentSize)
                     IR_OUTPUT_TYPE_KOTLIN_LIKE -> irFile.dumpKotlinLike(KotlinLikeDumpOptions(
                         printFileName = false,
-                        printFilePath = false
+                        printFilePath = false,
+                        indentSize = indentSize
                     ))
                     else -> irFile.dump()
                 }
