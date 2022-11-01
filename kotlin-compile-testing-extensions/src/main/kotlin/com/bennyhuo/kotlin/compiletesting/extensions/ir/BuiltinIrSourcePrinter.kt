@@ -4,6 +4,7 @@
  */
 package com.bennyhuo.kotlin.compiletesting.extensions.ir
 
+import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_INDENT_DEFAULT
 import org.jetbrains.kotlin.com.intellij.openapi.util.text.StringUtil
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
@@ -52,9 +53,8 @@ private inline fun <T> dumpKotlinLike(
     print: KotlinLikeDumper.(T) -> Unit,
     options: KotlinLikeDumpOptions = KotlinLikeDumpOptions()
 ): String {
-    val indent = (0 until options.indentSize).fold(StringBuilder()) { acc, i -> acc.append(' ') }.toString()
     val sb = StringBuilder()
-    KotlinLikeDumper(Printer(sb, 1, indent), options).print(target)
+    KotlinLikeDumper(Printer(sb, 1, options.indent), options).print(target)
     return sb.toString()
 }
 
@@ -68,7 +68,7 @@ class KotlinLikeDumpOptions(
     val labelPrintingStrategy: LabelPrintingStrategy = LabelPrintingStrategy.NEVER,
     val printFakeOverridesStrategy: FakeOverridesStrategy = FakeOverridesStrategy.ALL,
     val printElseAsTrue: Boolean = false,
-    val indentSize: Int = 4
+    val indent: String = IR_OUTPUT_INDENT_DEFAULT
     /*
     TODO add more options:
      always print visibility?

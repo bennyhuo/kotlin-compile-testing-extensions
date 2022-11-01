@@ -1,5 +1,6 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.module
 
+import com.bennyhuo.kotlin.compiletesting.extensions.ir.IrSourceOptions
 import com.bennyhuo.kotlin.compiletesting.extensions.result.ResultCollector
 import com.bennyhuo.kotlin.compiletesting.extensions.source.ExpectModuleInfo
 import com.bennyhuo.kotlin.compiletesting.extensions.utils.readTextAndUnify
@@ -34,7 +35,7 @@ fun KotlinModule.checkResult(
         options.checkGeneratedFiles,
         options.checkGeneratedIr,
         options.irOutputType,
-        options.irSourceIndentSize,
+        options.irSourceIndent,
         options.checkCompilerOutput,
         options.compilerOutputName,
         options.compilerOutputLevel,
@@ -52,7 +53,7 @@ fun Collection<KotlinModule>.checkResult(
         options.checkGeneratedFiles,
         options.checkGeneratedIr,
         options.irOutputType,
-        options.irSourceIndentSize,
+        options.irSourceIndent,
         options.checkCompilerOutput,
         options.compilerOutputName,
         options.compilerOutputLevel,
@@ -66,7 +67,7 @@ fun KotlinModule.checkResult(
     checkGeneratedFiles: Boolean = false,
     checkGeneratedIr: Boolean = false,
     irOutputType: Int = IR_OUTPUT_TYPE_KOTLIN_LIKE_JC,
-    irSourceIndentSize: Int = 4,
+    irSourceIndent: String = IR_OUTPUT_INDENT_DEFAULT,
     checkCompilerOutput: Boolean = false,
     compilerOutputName: String = "compiles.log",
     compilerOutputLevel: Int = COMPILER_OUTPUT_LEVEL_ERROR
@@ -78,7 +79,7 @@ fun KotlinModule.checkResult(
         checkGeneratedFiles,
         checkGeneratedIr,
         irOutputType,
-        irSourceIndentSize,
+        irSourceIndent,
         checkCompilerOutput,
         compilerOutputName,
         compilerOutputLevel
@@ -92,7 +93,7 @@ fun Collection<KotlinModule>.checkResult(
     checkGeneratedFiles: Boolean = false,
     checkGeneratedIr: Boolean = false,
     irOutputType: Int = IR_OUTPUT_TYPE_KOTLIN_LIKE_JC,
-    irSourceIndentSize: Int = 4,
+    irSourceIndent: String = IR_OUTPUT_INDENT_DEFAULT,
     checkCompilerOutput: Boolean = false,
     compilerOutputName: String = "compiles.log",
     compilerOutputLevel: Int = COMPILER_OUTPUT_LEVEL_ERROR
@@ -104,8 +105,7 @@ fun Collection<KotlinModule>.checkResult(
 
         forEach {
             it.sourcePrinter.isEnabled = true
-            it.sourcePrinter.type = irOutputType
-            it.sourcePrinter.indentSize = irSourceIndentSize
+            it.sourcePrinter.options = IrSourceOptions(irOutputType, irSourceIndent)
         }
     }
 

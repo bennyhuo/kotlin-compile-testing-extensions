@@ -15,6 +15,7 @@ package com.bennyhuo.kotlin.compiletesting.extensions.ir
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_INDENT_DEFAULT
 import org.jetbrains.kotlin.com.intellij.openapi.util.text.StringUtil
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
@@ -118,8 +119,7 @@ import kotlin.math.abs
 /**
  * This is a copied from the Jetpack Compose compiler with a little optimization.
  */
-internal fun IrElement.dumpSrc(indentSize: Int = 4): String {
-    val indent = (0 until indentSize).fold(StringBuilder()) { acc, i -> acc.append(' ') }.toString()
+internal fun IrElement.dumpSrc(indent: String = IR_OUTPUT_INDENT_DEFAULT): String {
     val sb = StringBuilder()
     accept(JcIrSourcePrinter(sb, "%tab%"), null)
     return sb
