@@ -1,5 +1,6 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.ir
 
+import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_INDENT_DEFAULT
 import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_TYPE_KOTLIN_LIKE
 import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_TYPE_KOTLIN_LIKE_JC
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
@@ -9,7 +10,6 @@ import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.name
-import org.jetbrains.kotlin.ir.util.KotlinLikeDumpOptions
 import org.jetbrains.kotlin.ir.util.dump
 import org.jetbrains.kotlin.ir.util.dumpKotlinLike
 import java.io.File
@@ -17,23 +17,18 @@ import java.io.File
 /**
  * Created by benny.
  */
-internal class IrSourcePrinterRegistrar(outputDir: File) : ComponentRegistrar {
+internal class IrSourceOptions(
+    var type: Int = IR_OUTPUT_TYPE_KOTLIN_LIKE_JC,
+    var indent: String = IR_OUTPUT_INDENT_DEFAULT
+)
 
-    private val extension = IrSourcePrinterExtension(outputDir)
+internal class IrSourcePrinterRegistrar(outputDir: File) : ComponentRegistrar {
 
     var isEnabled: Boolean = false
 
-    var type: Int
-        set(value) {
-            extension.type = value
-        }
-        get() = extension.type
+    var options = IrSourceOptions()
 
-    var indentSize: Int
-        set(value) {
-            extension.indentSize = value
-        }
-        get() = extension.indentSize
+    private val extension = IrSourcePrinterExtension(outputDir, options)
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         if (isEnabled) {
@@ -42,22 +37,25 @@ internal class IrSourcePrinterRegistrar(outputDir: File) : ComponentRegistrar {
     }
 }
 
-class IrSourcePrinterExtension(private val outputDir: File) : IrGenerationExtension {
-
-    var type: Int = IR_OUTPUT_TYPE_KOTLIN_LIKE_JC
-    var indentSize: Int = 4
+internal class IrSourcePrinterExtension(
+    private val outputDir: File,
+    private val options: IrSourceOptions
+) : IrGenerationExtension {
 
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
         moduleFragment.files.forEach { irFile ->
             outputDir.resolve(irFile.fqName.asString().replace('.', File.separatorChar)).run {
                 mkdirs()
-                val source = when(type) {
-                    IR_OUTPUT_TYPE_KOTLIN_LIKE_JC -> irFile.dumpSrc(indentSize)
-                    IR_OUTPUT_TYPE_KOTLIN_LIKE -> irFile.dumpKotlinLike(KotlinLikeDumpOptions(
-                        printFileName = false,
-                        printFilePath = false,
-                        indentSize = indentSize
-                    ))
+                val source = when (options.type) {
+                    IR_OUTPUT_TYPE_KOTLIN_LIKE_JC -> irFile.dumpSrc(options.indent)
+                    IR_OUTPUT_TYPE_KOTLIN_LIKE -> irFile.dumpKotlinLike(
+                        KotlinLikeDumpOptions(
+                            printFileName = false,
+                            printFilePath = false,
+                            indent = options.indent
+                        )
+                    )
+
                     else -> irFile.dump()
                 }
 
