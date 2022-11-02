@@ -24,12 +24,14 @@ class SourceFileInfo(val fileName: String) {
     }
 }
 
+/**
+ * Function should be 'public static' and returns Java type 'void' without any parameters.
+ */
 class Entry(
-    val fileName: String,
     val className: String,
     val functionName: String
 ) {
     override fun toString(): String {
-        return "$className#$functionName"
+        return "$className.$functionName"
     }
 }

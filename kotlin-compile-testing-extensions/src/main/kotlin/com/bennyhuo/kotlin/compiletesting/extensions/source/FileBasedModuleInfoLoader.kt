@@ -53,7 +53,6 @@ class FileBasedModuleInfoLoader(private val filePath: String) : ModuleInfoLoader
 
                     if (result.groupValues[5].isNotBlank() && result.groupValues[6].isNotBlank()) {
                         currentModule.entries += Entry(
-                            result.groupValues[1],
                             result.groupValues[5],
                             result.groupValues[6]
                         )
