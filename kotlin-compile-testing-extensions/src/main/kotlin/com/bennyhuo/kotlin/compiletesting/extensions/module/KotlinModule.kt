@@ -1,16 +1,18 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.module
 
+import com.bennyhuo.kotlin.compiletesting.extensions.compilation.runJvm
 import com.bennyhuo.kotlin.compiletesting.extensions.ir.IrSourcePrinterRegistrar
-import com.bennyhuo.kotlin.compiletesting.extensions.ir.escapeCharacters
 import com.bennyhuo.kotlin.compiletesting.extensions.source.Entry
 import com.bennyhuo.kotlin.compiletesting.extensions.source.SourceModuleInfo
-import com.bennyhuo.kotlin.compiletesting.extensions.utils.captureStdOut
 import com.bennyhuo.kotlin.compiletesting.extensions.utils.readTextAndUnify
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
-import com.tschuchort.compiletesting.*
+import com.tschuchort.compiletesting.KotlinCompilation
+import com.tschuchort.compiletesting.SourceFile
+import com.tschuchort.compiletesting.kspArgs
+import com.tschuchort.compiletesting.kspSourcesDir
+import com.tschuchort.compiletesting.symbolProcessorProviders
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import java.io.File
-import java.lang.reflect.Modifier
 import java.net.URLClassLoader
 import javax.annotation.processing.AbstractProcessor
 
@@ -116,6 +118,7 @@ class KotlinModule(
             compile()
         }
 
+        val compileResult = this.compileResult
         if (compileResult?.exitCode != KotlinCompilation.ExitCode.OK) {
             return emptyMap()
         }
@@ -130,14 +133,7 @@ class KotlinModule(
         )
 
         return entries.associate {
-            "${it.fileName}.stdout" to captureStdOut {
-                val entryClass = classLoader.loadClass(it.className)
-                val entryFunction = entryClass.getDeclaredMethod(it.functionName)
-                if (!Modifier.isStatic(entryFunction.modifiers)) {
-                    throw IllegalArgumentException("entry function $entryFunction must be static.")
-                }
-                entryFunction.invoke(null)
-            }
+            "$it.stdout" to compileResult.runJvm(it, classLoader)
         }
     }
 

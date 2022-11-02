@@ -9,12 +9,16 @@ import java.io.PrintStream
  */
 internal inline fun captureStdOut(block: () -> Unit): String {
     val originalStdOut = System.out
+    val originalStdErr = System.err
     val stdOutStream = ByteArrayOutputStream()
-    System.setOut(PrintStream(stdOutStream))
+    val printStream = PrintStream(stdOutStream)
+    System.setOut(printStream)
+    System.setErr(printStream)
     try {
         block()
     } finally {
         System.setOut(originalStdOut)
+        System.setErr(originalStdErr)
     }
     return stdOutStream.toString().unify()
 }
