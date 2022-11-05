@@ -15,16 +15,18 @@ import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import java.io.File
 import java.net.URLClassLoader
 import javax.annotation.processing.AbstractProcessor
+import javax.annotation.processing.Processor
 
 class KotlinModule(
     val name: String,
-    args: Map<String, String>,
     val sourceFiles: List<SourceFile>,
-    val dependencyNames: List<String>,
     val entries: List<Entry>,
+    val dependencyNames: List<String>,
     componentRegistrars: Collection<ComponentRegistrar> = emptyList(),
-    kaptProcessors: Collection<AbstractProcessor> = emptyList(),
-    kspProcessorProviders: Collection<SymbolProcessorProvider> = emptyList()
+    kaptProcessors: Collection<Processor> = emptyList(),
+    kaptArgs: Map<String, String> = emptyMap(),
+    kspProcessorProviders: Collection<SymbolProcessorProvider> = emptyList(),
+    kspArgs: Map<String, String> = emptyMap()
 ) {
     constructor(
         sourceModuleInfo: SourceModuleInfo,
@@ -33,13 +35,16 @@ class KotlinModule(
         kspProcessorProviders: Collection<SymbolProcessorProvider> = emptyList()
     ) : this(
         sourceModuleInfo.name,
-        sourceModuleInfo.args,
         sourceModuleInfo.sourceFileInfos.map { sourceFileInfo ->
             SourceFile.new(sourceFileInfo.fileName, sourceFileInfo.sourceBuilder.toString())
         },
-        sourceModuleInfo.dependencies,
         sourceModuleInfo.entries,
-        componentRegistrars, kaptProcessors, kspProcessorProviders
+        sourceModuleInfo.dependencies,
+        componentRegistrars + sourceModuleInfo.componentRegistrars(),
+        kaptProcessors + sourceModuleInfo.annotationProcessors(),
+        sourceModuleInfo.kaptArgs,
+        kspProcessorProviders + sourceModuleInfo.symbolProcessorProviders(),
+        sourceModuleInfo.kspArgs,
     )
 
     private val classpath = ArrayList<File>()
@@ -48,8 +53,8 @@ class KotlinModule(
 
     private val kspCompilation = if (kspProcessorProviders.isNotEmpty()) {
         newCompilation {
-            symbolProcessorProviders = kspProcessorProviders.toList()
-            kspArgs.putAll(args)
+            symbolProcessorProviders = kspProcessorProviders.distinctBy { it.javaClass }.toList()
+            this.kspArgs.putAll(kspArgs)
         }
     } else {
         null
@@ -76,11 +81,11 @@ class KotlinModule(
 
     init {
         if (componentRegistrars.isNotEmpty()) {
-            compilation.compilerPlugins += componentRegistrars + sourcePrinter
+            compilation.compilerPlugins += componentRegistrars.distinctBy { it.javaClass } + sourcePrinter
         }
 
-        compilation.annotationProcessors += kaptProcessors
-        compilation.kaptArgs.putAll(args)
+        compilation.annotationProcessors += kaptProcessors.distinctBy { it.javaClass }
+        compilation.kaptArgs.putAll(kaptArgs)
     }
 
     fun resolveDependencies(kotlinModuleMap: Map<String, KotlinModule>) {
@@ -149,15 +154,16 @@ class KotlinModule(
         dependencies += module
     }
 
-    private fun newCompilation(block: KotlinCompilation.() -> Unit = {}) = KotlinCompilation().also { compilation ->
-        compilation.verbose = false
-        compilation.inheritClassPath = true
-        compilation.classpaths = classpath
-        compilation.sources = sourceFiles
-        compilation.moduleName = name
+    private fun newCompilation(block: KotlinCompilation.() -> Unit = {}) =
+        KotlinCompilation().also { compilation ->
+            compilation.verbose = false
+            compilation.inheritClassPath = true
+            compilation.classpaths = classpath
+            compilation.sources = sourceFiles
+            compilation.moduleName = name
 
-        compilation.block()
-    }
+            compilation.block()
+        }
 
     override fun toString() =
         "$name: $isCompiled >> ${compileResult?.exitCode} ${compileResult?.messages}"

@@ -8,7 +8,15 @@ import java.io.File
 private const val SOURCE_START_LINE = "// SOURCE"
 private const val EXPECT_START_LINE = "// EXPECT"
 private val FILE_NAME_PATTERN = Regex("""// FILE: (([$\w.]+)\.([$\w]+))\s*(\[(\S*)#(\S*)])?""")
-private val MODULE_NAME_PATTERN = Regex("""// MODULE: ([-\w]+)(\s*/\s*(([-\w]+)(\s*,\s*([-\w]+))*))?\s*(#(.*))?""")
+private val MODULE_NAME_PATTERN =
+    Regex("""// MODULE: ([-\w]+)(\s*/\s*(([-\w]+)(\s*,\s*([-\w]+))*))?\s*""")
+
+private const val ARGS_PREFIX = "// ARGS:"
+private const val KSP_PREFIX = "// KSP:"
+private const val KSP_ARGS_PREFIX = "// KSP_ARGS:"
+private const val KAPT_PREFIX = "// KAPT: "
+private const val KAPT_ARGS_PREFIX = "// KAPT_ARGS:"
+private const val KCP_PREFIX = "// KCP:"
 
 private const val DEFAULT_MODULE = "default-module"
 private const val DEFAULT_FILE = "DefaultFile.kt"
@@ -31,50 +39,109 @@ class FileBasedModuleInfoLoader(private val filePath: String) : ModuleInfoLoader
     }
 
     override fun loadSourceModuleInfos(): Collection<SourceModuleInfo> {
-        return sourceLines.fold(ArrayList()) { moduleInfos, line ->
-            val moduleResult = MODULE_NAME_PATTERN.find(line)
-            if (moduleResult == null) {
-                if (moduleInfos.isEmpty()) {
-                    moduleInfos += SourceModuleInfo(DEFAULT_MODULE)
-                }
 
+        fun parseFiles(moduleInfo: SourceModuleInfo, input: ListIterator<String>) {
+            while (input.hasNext()) {
+                val line = input.next()
+                if (line.startsWith("// MODULE:")) {
+                    input.previous()
+                    break
+                }
                 val result = FILE_NAME_PATTERN.find(line)
                 if (result == null) {
-                    val currentModule = moduleInfos.last()
-                    if (currentModule.sourceFileInfos.isEmpty()) {
-                        moduleInfos.last().sourceFileInfos += SourceFileInfo(DEFAULT_FILE)
+                    if (moduleInfo.sourceFileInfos.isEmpty()) {
+                        moduleInfo.sourceFileInfos += SourceFileInfo(DEFAULT_FILE)
                     }
                     // append line to current source file
-                    currentModule.sourceFileInfos.last().sourceBuilder.append(line).appendLine()
+                    moduleInfo.sourceFileInfos.last().sourceBuilder.append(line).appendLine()
                 } else {
                     // find new source file
-                    val currentModule = moduleInfos.last()
-                    currentModule.sourceFileInfos += SourceFileInfo(result.groupValues[1])
+                    moduleInfo.sourceFileInfos += SourceFileInfo(result.groupValues[1])
 
                     if (result.groupValues[5].isNotBlank() && result.groupValues[6].isNotBlank()) {
-                        currentModule.entries += Entry(
+                        moduleInfo.entries += Entry(
                             result.groupValues[5],
                             result.groupValues[6]
                         )
                     }
                 }
+            }
+        }
+
+        fun parseModuleInfo(moduleInfo: SourceModuleInfo, input: ListIterator<String>) {
+            while (input.hasNext()) {
+                val line = input.next()
+                when {
+                    line.startsWith(KSP_PREFIX) -> {
+                        moduleInfo.symbolProcessorProviders += line.removePrefix(KSP_PREFIX)
+                            .split(",").map { it.trim() }
+                    }
+
+                    line.startsWith(KSP_ARGS_PREFIX) -> {
+                        moduleInfo.kspArgs += line.removePrefix(KSP_PREFIX).split(",").map {
+                            it.trim().split("=")
+                        }.associate { it[0] to it[1] }
+                    }
+
+                    line.startsWith(KAPT_PREFIX) -> {
+                        moduleInfo.annotationProcessors += line.removePrefix(KAPT_PREFIX).split(",")
+                            .map { it.trim() }
+                    }
+
+                    line.startsWith(KAPT_ARGS_PREFIX) -> {
+                        moduleInfo.kaptArgs += line.removePrefix(KAPT_ARGS_PREFIX).split(",").map {
+                            it.trim().split("=")
+                        }.associate { it[0] to it[1] }
+                    }
+
+                    line.startsWith(ARGS_PREFIX) -> {
+                        line.removePrefix(ARGS_PREFIX).split(",").map {
+                            it.trim().split("=")
+                        }.associate { it[0] to it[1] }.also {
+                            moduleInfo.kaptArgs += it
+                            moduleInfo.kspArgs += it
+                        }
+                    }
+
+                    line.startsWith(KCP_PREFIX) -> {
+                        moduleInfo.componentRegistrars += line.removePrefix(KCP_PREFIX).split(",")
+                            .map { it.trim() }
+                    }
+
+                    else -> {
+                        input.previous()
+                        break
+                    }
+                }
+            }
+        }
+
+        fun parseModule(input: ListIterator<String>): SourceModuleInfo {
+            val line = input.next()
+            val moduleResult = MODULE_NAME_PATTERN.find(line)
+            val sourceModuleInfo = if (moduleResult == null) {
+                input.previous()
+                SourceModuleInfo(DEFAULT_MODULE)
             } else {
                 val dependencies = moduleResult.groupValues[3].split(",")
                     .mapNotNull { it.trim().takeIf { it.isNotBlank() } }
 
-                val args = moduleResult.groupValues[8].split(",").mapNotNull {
-                    it.trim().split(":").takeIf { it.size == 2 }
-                }.associate { it[0] to it[1] }
-
-
-                moduleInfos += SourceModuleInfo(
-                    name = moduleResult.groupValues[1],
-                    args = args,
-                    dependencies = dependencies
-                )
+                SourceModuleInfo(name = moduleResult.groupValues[1]).apply {
+                    this.dependencies += dependencies
+                }
             }
-            moduleInfos
+
+            parseModuleInfo(sourceModuleInfo, input)
+            parseFiles(sourceModuleInfo, input)
+            return sourceModuleInfo
         }
+
+        val moduleInfos = ArrayList<SourceModuleInfo>()
+        val iterator = sourceLines.listIterator()
+        while (iterator.hasNext()) {
+            moduleInfos += parseModule(iterator)
+        }
+        return moduleInfos
     }
 
     override fun loadExpectModuleInfos(): Collection<ExpectModuleInfo> {
