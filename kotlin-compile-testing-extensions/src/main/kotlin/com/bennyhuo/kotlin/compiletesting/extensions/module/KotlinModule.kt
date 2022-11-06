@@ -14,7 +14,6 @@ import com.tschuchort.compiletesting.symbolProcessorProviders
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import java.io.File
 import java.net.URLClassLoader
-import javax.annotation.processing.AbstractProcessor
 import javax.annotation.processing.Processor
 
 class KotlinModule(
@@ -23,16 +22,16 @@ class KotlinModule(
     val entries: List<Entry>,
     val dependencyNames: List<String>,
     componentRegistrars: Collection<ComponentRegistrar> = emptyList(),
-    kaptProcessors: Collection<Processor> = emptyList(),
+    annotationProcessors: Collection<Processor> = emptyList(),
     kaptArgs: Map<String, String> = emptyMap(),
-    kspProcessorProviders: Collection<SymbolProcessorProvider> = emptyList(),
+    symbolProcessorProviders: Collection<SymbolProcessorProvider> = emptyList(),
     kspArgs: Map<String, String> = emptyMap()
 ) {
     constructor(
         sourceModuleInfo: SourceModuleInfo,
         componentRegistrars: Collection<ComponentRegistrar> = emptyList(),
-        kaptProcessors: Collection<AbstractProcessor> = emptyList(),
-        kspProcessorProviders: Collection<SymbolProcessorProvider> = emptyList()
+        annotationProcessors: Collection<Processor> = emptyList(),
+        symbolProcessorProviders: Collection<SymbolProcessorProvider> = emptyList()
     ) : this(
         sourceModuleInfo.name,
         sourceModuleInfo.sourceFileInfos.map { sourceFileInfo ->
@@ -41,9 +40,9 @@ class KotlinModule(
         sourceModuleInfo.entries,
         sourceModuleInfo.dependencies,
         componentRegistrars + sourceModuleInfo.componentRegistrars(),
-        kaptProcessors + sourceModuleInfo.annotationProcessors(),
+        annotationProcessors + sourceModuleInfo.annotationProcessors(),
         sourceModuleInfo.kaptArgs,
-        kspProcessorProviders + sourceModuleInfo.symbolProcessorProviders(),
+        symbolProcessorProviders + sourceModuleInfo.symbolProcessorProviders(),
         sourceModuleInfo.kspArgs,
     )
 
@@ -51,9 +50,9 @@ class KotlinModule(
 
     private val compilation = newCompilation()
 
-    private val kspCompilation = if (kspProcessorProviders.isNotEmpty()) {
+    private val kspCompilation = if (symbolProcessorProviders.isNotEmpty()) {
         newCompilation {
-            symbolProcessorProviders = kspProcessorProviders.distinctBy { it.javaClass }.toList()
+            this.symbolProcessorProviders = symbolProcessorProviders.distinctBy { it.javaClass }.toList()
             this.kspArgs.putAll(kspArgs)
         }
     } else {
@@ -75,6 +74,9 @@ class KotlinModule(
         kspCompilation?.kspSourcesDir
     )
 
+    val workingDir: File
+        get() = compilation.workingDir
+
     val irTransformedSourceDir: File = compilation.workingDir.resolve("ir")
 
     internal val sourcePrinter = IrSourcePrinterRegistrar(irTransformedSourceDir)
@@ -84,7 +86,7 @@ class KotlinModule(
             compilation.compilerPlugins += componentRegistrars.distinctBy { it.javaClass } + sourcePrinter
         }
 
-        compilation.annotationProcessors += kaptProcessors.distinctBy { it.javaClass }
+        compilation.annotationProcessors += annotationProcessors.distinctBy { it.javaClass }
         compilation.kaptArgs.putAll(kaptArgs)
     }
 
