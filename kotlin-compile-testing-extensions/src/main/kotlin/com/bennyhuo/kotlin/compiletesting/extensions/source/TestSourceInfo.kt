@@ -49,7 +49,8 @@ class SourceFileInfo(val fileName: String) {
  */
 class Entry(
     val className: String,
-    val functionName: String
+    val functionName: String,
+    val args: List<String>
 ) {
     override fun toString(): String {
         return "$className.$functionName"

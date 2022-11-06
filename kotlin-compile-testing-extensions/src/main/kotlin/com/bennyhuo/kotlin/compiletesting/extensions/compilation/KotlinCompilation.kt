@@ -15,7 +15,14 @@ fun KotlinCompilation.Result.runJvm(
     return if (exitCode == KotlinCompilation.ExitCode.OK) {
         captureStdOut {
             val entryClass = classLoader.loadClass(entry.className)
-            val entryFunction = entryClass.getDeclaredMethod(entry.functionName)
+            val entryFunction = entryClass.declaredMethods.singleOrNull {
+                it.name == entry.functionName && it.parameterCount == entry.args.size
+            }
+
+            check(entryFunction != null) {
+                "Cannot find method '${entry.functionName}' in '${entry.className}' with ${entry.args.size} parameters."
+            }
+
             check(Modifier.isStatic(entryFunction.modifiers)) {
                 "Entry function $entryFunction must be static."
             }
@@ -25,10 +32,27 @@ fun KotlinCompilation.Result.runJvm(
             check(entryFunction.returnType == Void.TYPE) {
                 "Entry function $entryFunction should return void."
             }
-            check(entryFunction.parameterCount == 0) {
-                "Entry function cannot have parameters."
-            }
-            entryFunction.invoke(null)
+
+            val args = entryFunction.parameterTypes.zip(entry.args) {
+                type, arg -> type.valueOf(arg)
+            }.toTypedArray()
+
+            entryFunction.invoke(null, *args)
         }
     } else ""
+}
+
+private fun <T> Class<T>.valueOf(value: String): T? {
+    if (value == "null") return null
+    return when(this) {
+        Boolean::class.java -> value.toBoolean()
+        Char::class.java -> value[0]
+        Short::class.java -> value.toShort()
+        Int::class.java -> value.toInt()
+        Long::class.java -> value.toLong()
+        Float::class.java -> value.toFloat()
+        Double::class.java -> value.toDouble()
+        String::class.java -> value
+        else -> throw IllegalArgumentException("Parameter type $this is not supported.")
+    } as T
 }

@@ -17,6 +17,7 @@ private const val KSP_ARGS_PREFIX = "// KSP_ARGS:"
 private const val KAPT_PREFIX = "// KAPT: "
 private const val KAPT_ARGS_PREFIX = "// KAPT_ARGS:"
 private const val KCP_PREFIX = "// KCP:"
+private const val ENTRY_PREFIX = "// ENTRY:"
 
 private const val DEFAULT_MODULE = "default-module"
 private const val DEFAULT_FILE = "DefaultFile.kt"
@@ -40,6 +41,32 @@ class FileBasedModuleInfoLoader(private val filePath: String) : ModuleInfoLoader
 
     override fun loadSourceModuleInfos(): Collection<SourceModuleInfo> {
 
+        fun parseFileInfo(moduleInfo: SourceModuleInfo, input: ListIterator<String>) {
+            while (input.hasNext()) {
+                val line = input.next()
+                if (line.startsWith(ENTRY_PREFIX)) {
+                    val splits = line.removePrefix(ENTRY_PREFIX).trim().split("#")
+                    check(splits.size == 2) {
+                        "Both class name and function name is required for an entry."
+                    }
+                    val className = splits[0]
+                    val functionParts = splits[1].split("(", limit = 2)
+                    val functionName = functionParts[0]
+                    val args = if (functionParts.size == 2) {
+                        val argsPart =  functionParts[1]
+                        check(argsPart.endsWith(")")) {
+                            "Invalid function argument list."
+                        }
+                        argsPart.removeSuffix(")").split(",").map { it.trim() }
+                    } else emptyList()
+                    moduleInfo.entries += Entry(className, functionName, args)
+                } else {
+                    input.previous()
+                    break
+                }
+            }
+        }
+
         fun parseFiles(moduleInfo: SourceModuleInfo, input: ListIterator<String>) {
             while (input.hasNext()) {
                 val line = input.next()
@@ -51,9 +78,12 @@ class FileBasedModuleInfoLoader(private val filePath: String) : ModuleInfoLoader
                 if (result == null) {
                     if (moduleInfo.sourceFileInfos.isEmpty()) {
                         moduleInfo.sourceFileInfos += SourceFileInfo(DEFAULT_FILE)
+                        input.previous()
+                        parseFileInfo(moduleInfo, input)
+                    } else {
+                        // append line to current source file
+                        moduleInfo.sourceFileInfos.last().sourceBuilder.append(line).appendLine()
                     }
-                    // append line to current source file
-                    moduleInfo.sourceFileInfos.last().sourceBuilder.append(line).appendLine()
                 } else {
                     // find new source file
                     moduleInfo.sourceFileInfos += SourceFileInfo(result.groupValues[1])
@@ -61,9 +91,12 @@ class FileBasedModuleInfoLoader(private val filePath: String) : ModuleInfoLoader
                     if (result.groupValues[5].isNotBlank() && result.groupValues[6].isNotBlank()) {
                         moduleInfo.entries += Entry(
                             result.groupValues[5],
-                            result.groupValues[6]
+                            result.groupValues[6],
+                            emptyList()
                         )
                     }
+
+                    parseFileInfo(moduleInfo, input)
                 }
             }
         }
