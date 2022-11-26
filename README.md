@@ -42,9 +42,11 @@ See the tests in [bennyhuo/Mixin](https://github.com/bennyhuo/Mixin/tree/master/
 
 ## ChangeLog
 
-### 1.7.10.2-SNAPSHOT
+### 1.7.10.2
 
 * Add support to check module results.
+* Add support to check IR outputs.
+* Add support for JVM entry.
 
 ### 1.7.10.1
 
