@@ -32,7 +32,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation("com.bennyhuo.kotlin:kotlin-compile-testing-extensions:1.7.10.2-SNAPSHOT")
+    testImplementation("com.bennyhuo.kotlin:kotlin-compile-testing-extensions:1.8.0.0-SNAPSHOT")
 }
 ```
 
@@ -41,6 +41,10 @@ dependencies {
 See the tests in [bennyhuo/Mixin](https://github.com/bennyhuo/Mixin/tree/master/compiler/).
 
 ## ChangeLog
+
+### 1.8.0.0-SNAPSHOT
+
+* Upgrade to Kotlin 1.8.0, depends on the fork maintained by [ZacSweers](https://github.com/ZacSweers/kotlin-compile-testing).
 
 ### 1.7.10.2
 

@@ -5,11 +5,13 @@ import com.bennyhuo.kotlin.compiletesting.extensions.result.ResultCollector
 import com.bennyhuo.kotlin.compiletesting.extensions.source.ExpectModuleInfo
 import com.bennyhuo.kotlin.compiletesting.extensions.utils.readTextAndUnify
 import com.tschuchort.compiletesting.KotlinCompilation
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import kotlin.test.assertEquals
 
 /**
  * Created by benny at 2022/1/3 8:47 AM.
  */
+@ExperimentalCompilerApi
 internal fun Collection<KotlinModule>.resolveAllDependencies() {
     val moduleMap = this.associateBy { it.name }
     forEach {
@@ -17,6 +19,7 @@ internal fun Collection<KotlinModule>.resolveAllDependencies() {
     }
 }
 
+@ExperimentalCompilerApi
 fun Collection<KotlinModule>.compileAll() {
     resolveAllDependencies()
     forEach {
@@ -24,6 +27,7 @@ fun Collection<KotlinModule>.compileAll() {
     }
 }
 
+@ExperimentalCompilerApi
 fun KotlinModule.checkResult(
     expectModuleInfo: ExpectModuleInfo,
     options: CheckResultOptions = CheckResultOptions()
@@ -42,6 +46,7 @@ fun KotlinModule.checkResult(
     )
 }
 
+@ExperimentalCompilerApi
 fun Collection<KotlinModule>.checkResult(
     expectModuleInfos: Collection<ExpectModuleInfo>,
     options: CheckResultOptions = CheckResultOptions()
@@ -60,6 +65,7 @@ fun Collection<KotlinModule>.checkResult(
     )
 }
 
+@ExperimentalCompilerApi
 fun KotlinModule.checkResult(
     expectModuleInfo: ExpectModuleInfo,
     checkExitCode: Boolean = true,
@@ -86,6 +92,7 @@ fun KotlinModule.checkResult(
     )
 }
 
+@ExperimentalCompilerApi
 fun Collection<KotlinModule>.checkResult(
     expectModuleInfos: Collection<ExpectModuleInfo>,
     checkExitCode: Boolean = true,
@@ -106,6 +113,9 @@ fun Collection<KotlinModule>.checkResult(
         forEach {
             it.sourcePrinter.isEnabled = true
             it.sourcePrinter.options = IrSourceOptions(irOutputType, irSourceIndent)
+
+            it.sourcePrinterLegacy.isEnabled = true
+            it.sourcePrinterLegacy.options = IrSourceOptions(irOutputType, irSourceIndent)
         }
     }
 

@@ -16,6 +16,7 @@ private const val KSP_PREFIX = "// KSP:"
 private const val KSP_ARGS_PREFIX = "// KSP_ARGS:"
 private const val KAPT_PREFIX = "// KAPT: "
 private const val KAPT_ARGS_PREFIX = "// KAPT_ARGS:"
+private const val KCP_LEGACY_PREFIX = "// KCP_LEGACY:"
 private const val KCP_PREFIX = "// KCP:"
 private const val ENTRY_PREFIX = "// ENTRY:"
 
@@ -136,8 +137,13 @@ class FileBasedModuleInfoLoader(private val filePath: String) : ModuleInfoLoader
                         }
                     }
 
+                    line.startsWith(KCP_LEGACY_PREFIX) -> {
+                        moduleInfo.componentRegistrars += line.removePrefix(KCP_LEGACY_PREFIX).split(",")
+                            .map { it.trim() }
+                    }
+
                     line.startsWith(KCP_PREFIX) -> {
-                        moduleInfo.componentRegistrars += line.removePrefix(KCP_PREFIX).split(",")
+                        moduleInfo.compilerPluginRegistrars += line.removePrefix(KCP_PREFIX).split(",")
                             .map { it.trim() }
                     }
 

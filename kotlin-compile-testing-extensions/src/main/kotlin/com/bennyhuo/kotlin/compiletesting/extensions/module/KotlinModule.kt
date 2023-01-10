@@ -1,6 +1,7 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.module
 
 import com.bennyhuo.kotlin.compiletesting.extensions.compilation.runJvm
+import com.bennyhuo.kotlin.compiletesting.extensions.ir.IrSourcePrinterLegacyRegistrar
 import com.bennyhuo.kotlin.compiletesting.extensions.ir.IrSourcePrinterRegistrar
 import com.bennyhuo.kotlin.compiletesting.extensions.source.Entry
 import com.bennyhuo.kotlin.compiletesting.extensions.source.SourceModuleInfo
@@ -11,17 +12,21 @@ import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.kspArgs
 import com.tschuchort.compiletesting.kspSourcesDir
 import com.tschuchort.compiletesting.symbolProcessorProviders
+import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import java.io.File
 import java.net.URLClassLoader
 import javax.annotation.processing.Processor
 
+@ExperimentalCompilerApi
 class KotlinModule(
     val name: String,
     val sourceFiles: List<SourceFile>,
     val entries: List<Entry>,
     val dependencyNames: List<String>,
     componentRegistrars: Collection<ComponentRegistrar> = emptyList(),
+    compilerPluginRegistrars: Collection<CompilerPluginRegistrar> = emptyList(),
     annotationProcessors: Collection<Processor> = emptyList(),
     kaptArgs: Map<String, String> = emptyMap(),
     symbolProcessorProviders: Collection<SymbolProcessorProvider> = emptyList(),
@@ -30,6 +35,7 @@ class KotlinModule(
     constructor(
         sourceModuleInfo: SourceModuleInfo,
         componentRegistrars: Collection<ComponentRegistrar> = emptyList(),
+        compilerPluginRegistrars: Collection<CompilerPluginRegistrar> = emptyList(),
         annotationProcessors: Collection<Processor> = emptyList(),
         symbolProcessorProviders: Collection<SymbolProcessorProvider> = emptyList()
     ) : this(
@@ -40,6 +46,7 @@ class KotlinModule(
         sourceModuleInfo.entries,
         sourceModuleInfo.dependencies,
         componentRegistrars + sourceModuleInfo.componentRegistrars(),
+        compilerPluginRegistrars + sourceModuleInfo.compilerPluginRegistrars(),
         annotationProcessors + sourceModuleInfo.annotationProcessors(),
         sourceModuleInfo.kaptArgs,
         symbolProcessorProviders + sourceModuleInfo.symbolProcessorProviders(),
@@ -79,11 +86,16 @@ class KotlinModule(
 
     val irTransformedSourceDir: File = compilation.workingDir.resolve("ir")
 
+    internal val sourcePrinterLegacy = IrSourcePrinterLegacyRegistrar(irTransformedSourceDir)
     internal val sourcePrinter = IrSourcePrinterRegistrar(irTransformedSourceDir)
 
     init {
         if (componentRegistrars.isNotEmpty()) {
-            compilation.compilerPlugins += componentRegistrars.distinctBy { it.javaClass } + sourcePrinter
+            compilation.componentRegistrars += componentRegistrars.distinctBy { it.javaClass } + sourcePrinterLegacy
+        }
+
+        if (compilerPluginRegistrars.isNotEmpty()) {
+            compilation.compilerPluginRegistrars += compilerPluginRegistrars.distinctBy { it.javaClass } + sourcePrinter
         }
 
         compilation.annotationProcessors += annotationProcessors.distinctBy { it.javaClass }
