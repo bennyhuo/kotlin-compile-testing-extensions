@@ -1,12 +1,14 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.module
 
 import com.tschuchort.compiletesting.KotlinCompilation
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import java.io.File
 
 
 
 private val compileLogPattern = Regex("([iew]): .*/(.*): \\((\\d+), (\\d+)\\): (.*)")
 
+@ExperimentalCompilerApi
 fun KotlinCompilation.Result.parseOutput(): CompilerOutput {
     return compileLogPattern.findAll(messages).map { result ->
         CompilerOutputLine(
@@ -22,6 +24,7 @@ fun KotlinCompilation.Result.parseOutput(): CompilerOutput {
 }
 
 
+@ExperimentalCompilerApi
 class CompilerOutput(
     val code: KotlinCompilation.ExitCode,
     val outputs: List<CompilerOutputLine>

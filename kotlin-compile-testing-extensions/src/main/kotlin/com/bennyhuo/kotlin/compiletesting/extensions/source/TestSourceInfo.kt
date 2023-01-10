@@ -1,9 +1,12 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.source
 
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import javax.annotation.processing.Processor
 
+@OptIn(ExperimentalCompilerApi::class)
 class SourceModuleInfo(
     val name: String,
     val annotationProcessors: MutableList<String> = ArrayList(),
@@ -11,6 +14,7 @@ class SourceModuleInfo(
     val symbolProcessorProviders: MutableList<String> = ArrayList(),
     val kspArgs: MutableMap<String, String> = HashMap(),
     val componentRegistrars: MutableList<String> = ArrayList(),
+    val compilerPluginRegistrars: MutableList<String> = ArrayList(),
     val dependencies: MutableList<String> = ArrayList(),
     val sourceFileInfos: MutableList<SourceFileInfo> = ArrayList(),
     val entries: MutableList<Entry> = ArrayList()
@@ -26,6 +30,7 @@ class SourceModuleInfo(
 
     internal fun componentRegistrars() = componentRegistrars.instantiate<ComponentRegistrar>()
 
+    internal fun compilerPluginRegistrars() = compilerPluginRegistrars.instantiate<CompilerPluginRegistrar>()
 }
 
 class ExpectModuleInfo(

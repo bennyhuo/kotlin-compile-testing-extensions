@@ -6,7 +6,9 @@ import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_TYPE_KOTLI
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.com.intellij.mock.MockProject
+import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.name
@@ -22,7 +24,13 @@ internal class IrSourceOptions(
     var indent: String = IR_OUTPUT_INDENT_DEFAULT
 )
 
-internal class IrSourcePrinterRegistrar(outputDir: File) : ComponentRegistrar {
+@Deprecated(
+    message = "IrSourcePrinterLegacyRegistrar is deprecated. Please use IrSourcePrinterRegistrar instead.",
+    replaceWith = ReplaceWith("IrSourcePrinterRegistrar"),
+    level = DeprecationLevel.WARNING
+)
+@ExperimentalCompilerApi
+internal class IrSourcePrinterLegacyRegistrar(outputDir: File) : ComponentRegistrar {
 
     var isEnabled: Boolean = false
 
@@ -33,6 +41,23 @@ internal class IrSourcePrinterRegistrar(outputDir: File) : ComponentRegistrar {
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         if (isEnabled) {
             IrGenerationExtension.registerExtension(project, extension)
+        }
+    }
+}
+
+@ExperimentalCompilerApi
+internal class IrSourcePrinterRegistrar(outputDir: File) : CompilerPluginRegistrar() {
+
+    var isEnabled: Boolean = false
+
+    var options = IrSourceOptions()
+
+    private val extension = IrSourcePrinterExtension(outputDir, options)
+
+    override val supportsK2: Boolean = false
+    override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
+        if (isEnabled) {
+            IrGenerationExtension.registerExtension(extension)
         }
     }
 }
