@@ -96,6 +96,13 @@ class KotlinModule(
 
         if (compilerPluginRegistrars.isNotEmpty()) {
             compilation.compilerPluginRegistrars += compilerPluginRegistrars.distinctBy { it.javaClass } + sourcePrinter
+
+            // This is a workaround to make compilerPluginRegistrars loaded by the compiler.
+            // See: https://github.com/ZacSweers/kotlin-compile-testing/pull/124
+            if (componentRegistrars.isEmpty()) {
+                compilation.componentRegistrars += sourcePrinterLegacy
+                sourcePrinterLegacy.isEnabled = false
+            }
         }
 
         compilation.annotationProcessors += annotationProcessors.distinctBy { it.javaClass }
