@@ -6,11 +6,17 @@ import java.io.File
 
 
 
-private val compileLogPattern = Regex("([iew]): .*/(.*): \\((\\d+), (\\d+)\\): (.*)")
+internal val compileLogPattern = Regex("""([iew]): .*[/\\](.*):(\d+):(\d+)? (.*)""")
 
 @ExperimentalCompilerApi
 fun KotlinCompilation.Result.parseOutput(): CompilerOutput {
-    return compileLogPattern.findAll(messages).map { result ->
+    return CompilerOutput(exitCode, outputs = messages.parseOutput().toList())
+
+}
+
+@ExperimentalCompilerApi
+internal fun String.parseOutput(): Sequence<CompilerOutputLine> {
+    return compileLogPattern.findAll(this).map { result ->
         CompilerOutputLine(
             result.groupValues[1],
             result.groupValues[2],
@@ -18,11 +24,8 @@ fun KotlinCompilation.Result.parseOutput(): CompilerOutput {
             result.groupValues[4].toIntOrNull() ?: -1,
             result.groupValues[5],
         )
-    }.let {
-        CompilerOutput(exitCode, outputs = it.toList())
     }
 }
-
 
 @ExperimentalCompilerApi
 class CompilerOutput(

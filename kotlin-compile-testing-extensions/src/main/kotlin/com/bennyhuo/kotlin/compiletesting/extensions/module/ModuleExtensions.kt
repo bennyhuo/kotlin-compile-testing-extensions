@@ -32,18 +32,7 @@ fun KotlinModule.checkResult(
     expectModuleInfo: ExpectModuleInfo,
     options: CheckResultOptions = CheckResultOptions()
 ) {
-    checkResult(
-        expectModuleInfo,
-        options.checkExitCode,
-        options.executeEntries,
-        options.checkGeneratedFiles,
-        options.checkGeneratedIr,
-        options.irOutputType,
-        options.irSourceIndent,
-        options.checkCompilerOutput,
-        options.compilerOutputName,
-        options.compilerOutputLevel,
-    )
+    listOf(this).checkResult(listOf(expectModuleInfo), options)
 }
 
 @ExperimentalCompilerApi
@@ -51,24 +40,71 @@ fun Collection<KotlinModule>.checkResult(
     expectModuleInfos: Collection<ExpectModuleInfo>,
     options: CheckResultOptions = CheckResultOptions()
 ) {
-    checkResult(
-        expectModuleInfos,
-        options.checkExitCode,
-        options.executeEntries,
-        options.checkGeneratedFiles,
-        options.checkGeneratedIr,
-        options.irOutputType,
-        options.irSourceIndent,
-        options.checkCompilerOutput,
-        options.compilerOutputName,
-        options.compilerOutputLevel,
-    )
+    with(options) {
+        if (checkGeneratedIr) {
+            check(all { !it.isCompiled }) {
+                "Modules should not be compiled before if checkGeneratedIr == true."
+            }
+
+            forEach {
+                it.sourcePrinter.isEnabled = true
+                it.sourcePrinter.options = IrSourceOptions(irOutputType, irSourceIndent)
+
+                it.sourcePrinterLegacy.isEnabled = true
+                it.sourcePrinterLegacy.options = IrSourceOptions(irOutputType, irSourceIndent)
+            }
+        }
+
+        compileAll()
+        val resultMap = associate {
+            if (checkExitCode) {
+                assertEquals(exitCode, it.compileResult?.exitCode)
+            }
+
+            val result = HashMap<String, String>()
+
+            if (checkCompilerOutput) {
+                it.compileResult?.let { compilationResult ->
+                    val compilerOutput = compilationResult.parseOutput().filterOutputs(compilerOutputLevel).toString()
+                    result[compilerOutputName] = compilerOutput
+                }
+            }
+
+            if (executeEntries) {
+                result += it.runJvm()
+            }
+
+            if (checkGeneratedFiles) {
+                result += it.generatedSourceDirs.flatMap {
+                    it.walkTopDown().filter { !it.isDirectory }
+                }.associate { it.name to it.readTextAndUnify() }
+            }
+
+            if (checkGeneratedIr) {
+                result += it.irTransformedSourceDir.walkTopDown().filter {
+                    !it.isDirectory
+                }.associate { it.name to it.readTextAndUnify() }
+            }
+
+            it.name to result
+        }
+
+        expectModuleInfos.fold(ResultCollector()) { collector, expectModuleInfo ->
+            collector.collectModule(expectModuleInfo.name)
+            expectModuleInfo.sourceFileInfos.forEach {
+                collector.collectFile(it.fileName)
+                collector.collectLine(it.content, resultMap[expectModuleInfo.name]?.get(it.fileName))
+            }
+            collector
+        }.apply()
+    }
 }
 
 @ExperimentalCompilerApi
 fun KotlinModule.checkResult(
     expectModuleInfo: ExpectModuleInfo,
     checkExitCode: Boolean = true,
+    exitCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
     executeEntries: Boolean = false,
     checkGeneratedFiles: Boolean = false,
     checkGeneratedIr: Boolean = false,
@@ -81,6 +117,7 @@ fun KotlinModule.checkResult(
     listOf(this).checkResult(
         listOf(expectModuleInfo),
         checkExitCode,
+        exitCode,
         executeEntries,
         checkGeneratedFiles,
         checkGeneratedIr,
@@ -95,7 +132,8 @@ fun KotlinModule.checkResult(
 @ExperimentalCompilerApi
 fun Collection<KotlinModule>.checkResult(
     expectModuleInfos: Collection<ExpectModuleInfo>,
-    checkExitCode: Boolean = true,
+    checkExitCode: Boolean = false,
+    exitCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
     executeEntries: Boolean = false,
     checkGeneratedFiles: Boolean = false,
     checkGeneratedIr: Boolean = false,
@@ -105,60 +143,19 @@ fun Collection<KotlinModule>.checkResult(
     compilerOutputName: String = "compiles.log",
     compilerOutputLevel: Int = COMPILER_OUTPUT_LEVEL_ERROR
 ) {
-    if (checkGeneratedIr) {
-        check(all { !it.isCompiled }) {
-            "Modules should not be compiled before if checkGeneratedIr == true."
-        }
-
-        forEach {
-            it.sourcePrinter.isEnabled = true
-            it.sourcePrinter.options = IrSourceOptions(irOutputType, irSourceIndent)
-
-            it.sourcePrinterLegacy.isEnabled = true
-            it.sourcePrinterLegacy.options = IrSourceOptions(irOutputType, irSourceIndent)
-        }
-    }
-
-    compileAll()
-    val resultMap = associate {
-        if (checkExitCode) {
-            assertEquals(it.compileResult?.exitCode, KotlinCompilation.ExitCode.OK)
-        }
-
-        val result = HashMap<String, String>()
-
-        if (checkCompilerOutput) {
-            it.compileResult?.let { compilationResult ->
-                val compilerOutput = compilationResult.parseOutput().filterOutputs(compilerOutputLevel).toString()
-                result[compilerOutputName] = compilerOutput
-            }
-        }
-
-        if (executeEntries) {
-            result += it.runJvm()
-        }
-
-        if (checkGeneratedFiles) {
-            result += it.generatedSourceDirs.flatMap {
-                it.walkTopDown().filter { !it.isDirectory }
-            }.associate { it.name to it.readTextAndUnify() }
-        }
-
-        if (checkGeneratedIr) {
-            result += it.irTransformedSourceDir.walkTopDown().filter {
-                !it.isDirectory
-            }.associate { it.name to it.readTextAndUnify() }
-        }
-
-        it.name to result
-    }
-
-    expectModuleInfos.fold(ResultCollector()) { collector, expectModuleInfo ->
-        collector.collectModule(expectModuleInfo.name)
-        expectModuleInfo.sourceFileInfos.forEach {
-            collector.collectFile(it.fileName)
-            collector.collectLine(it.content, resultMap[expectModuleInfo.name]?.get(it.fileName))
-        }
-        collector
-    }.apply()
+    checkResult(
+        expectModuleInfos,
+        CheckResultOptions(
+            checkExitCode,
+            exitCode,
+            executeEntries,
+            checkGeneratedFiles,
+            checkGeneratedIr,
+            irOutputType,
+            irSourceIndent,
+            checkCompilerOutput,
+            compilerOutputName,
+            compilerOutputLevel
+        )
+    )
 }
