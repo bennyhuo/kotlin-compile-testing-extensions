@@ -1,5 +1,8 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.module
 
+import com.tschuchort.compiletesting.KotlinCompilation
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
+
 /**
  * Created by benny.
  */
@@ -29,8 +32,10 @@ const val IR_OUTPUT_TYPE_KOTLIN_LIKE_JC = 2
 
 const val IR_OUTPUT_INDENT_DEFAULT = "    "
 
+@ExperimentalCompilerApi
 class CheckResultOptions(
     val checkExitCode: Boolean = true,
+    val exitCode: KotlinCompilation.ExitCode = KotlinCompilation.ExitCode.OK,
     val executeEntries: Boolean = false,
     val checkGeneratedFiles: Boolean = false,
     val checkGeneratedIr: Boolean = false,
