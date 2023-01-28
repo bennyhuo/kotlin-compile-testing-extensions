@@ -45,6 +45,9 @@ See the tests in [bennyhuo/Mixin](https://github.com/bennyhuo/Mixin/tree/master/
 ### 1.8.0.0-SNAPSHOT
 
 * Upgrade to Kotlin 1.8.0, depends on the fork maintained by [ZacSweers](https://github.com/ZacSweers/kotlin-compile-testing).
+* Fix compiler log pattern.
+* Add 'exitCode' parameter to 'checkResult'.
+* Add 'supportK2' to 'KotlinModule'.
 
 ### 1.7.10.2
 
