@@ -87,6 +87,8 @@ class KotlinModule(
     val workingDir: File
         get() = compilation.workingDir
 
+    var languageVersion: String? by compilation::languageVersion
+
     val irTransformedSourceDir: File = compilation.workingDir.resolve("ir")
 
     internal val sourcePrinterLegacy = IrSourcePrinterLegacyRegistrar(irTransformedSourceDir)
