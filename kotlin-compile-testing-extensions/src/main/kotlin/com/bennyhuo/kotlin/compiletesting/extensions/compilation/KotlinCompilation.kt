@@ -39,7 +39,11 @@ fun KotlinCompilation.Result.runJvm(
                 type, arg -> type.valueOf(arg)
             }.toTypedArray()
 
-            entryFunction.invoke(null, *args)
+            try {
+                entryFunction.invoke(null, *args)
+            } catch (t: Throwable) {
+                t.printStackTrace()
+            }
         }
     } else ""
 }
