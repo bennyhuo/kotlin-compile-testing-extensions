@@ -19,20 +19,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation("com.bennyhuo.kotlin:kotlin-compile-testing-extensions:1.7.10.1")
-}
-```
-
-For snapshot:
-
-```
-repositories {
-    ...
-    maven("https://oss.sonatype.org/content/repositories/snapshots/")
-}
-
-dependencies {
-    testImplementation("com.bennyhuo.kotlin:kotlin-compile-testing-extensions:1.8.0.0-SNAPSHOT")
+    testImplementation("com.bennyhuo.kotlin:kotlin-compile-testing-extensions:1.8.0.0")
 }
 ```
 
@@ -42,7 +29,7 @@ See the tests in [bennyhuo/Mixin](https://github.com/bennyhuo/Mixin/tree/master/
 
 ## ChangeLog
 
-### 1.8.0.0-SNAPSHOT
+### 1.8.0.0
 
 * Upgrade to Kotlin 1.8.0, depends on the fork maintained by [ZacSweers](https://github.com/ZacSweers/kotlin-compile-testing).
 * Fix compiler log pattern.
