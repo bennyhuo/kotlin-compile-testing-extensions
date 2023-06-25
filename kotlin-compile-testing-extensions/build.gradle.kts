@@ -14,4 +14,6 @@ dependencies {
     implementation(kotlin("test-junit"))
 }
 
-java.sourceCompatibility = JavaVersion.VERSION_1_8
+kotlin {
+    jvmToolchain(8)
+}
