@@ -80,6 +80,10 @@ fun Collection<KotlinModule>.checkResult(
                 }.associate { it.name to it.readTextAndUnify() }
             }
 
+            result += it.customizedOutputDirs.flatMap {
+                it.walkTopDown().filter { !it.isDirectory }
+            }.associate { it.name to it.readTextAndUnify() }
+
             if (checkGeneratedIr) {
                 result += it.irTransformedSourceDir.walkTopDown().filter {
                     !it.isDirectory

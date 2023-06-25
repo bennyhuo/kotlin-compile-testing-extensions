@@ -84,6 +84,8 @@ class KotlinModule(
         kspCompilation?.kspSourcesDir
     )
 
+    val customizedOutputDirs: MutableList<File> = ArrayList()
+
     val workingDir: File
         get() = compilation.workingDir
 
