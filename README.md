@@ -1,4 +1,4 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.bennyhuo.kotlin/kotlin-compile-testing-extensions.svg)](https://maven-badges.herokuapp.com/maven-central/com.bennyhuo.kotlin/kotlin-compile-testing-extensions)
 
 
 # kotlin-compile-testing-extensions
@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation("com.bennyhuo.kotlin:kotlin-compile-testing-extensions:1.8.0.0")
+    testImplementation("com.bennyhuo.kotlin:kotlin-compile-testing-extensions:<lastest-version>")
 }
 ```
 
