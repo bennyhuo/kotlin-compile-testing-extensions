@@ -4,13 +4,13 @@ buildscript {
         maven("https://mirrors.tencent.com/nexus/repository/maven-public/")
     }
     dependencies {
-        classpath("com.vanniktech:gradle-maven-publish-plugin:0.18.0")
+        classpath("com.vanniktech:gradle-maven-publish-plugin:0.22.0")
     }
 }
 
 plugins {
-    kotlin("jvm") version "1.8.0" apply false
-    id("org.jetbrains.dokka") version "1.7.10" apply false
+    kotlin("jvm") version "1.8.20" apply false
+    id("org.jetbrains.dokka") version "1.8.20" apply false
 }
 
 subprojects {

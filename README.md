@@ -29,6 +29,14 @@ See the tests in [bennyhuo/Mixin](https://github.com/bennyhuo/Mixin/tree/master/
 
 ## ChangeLog
 
+### 1.8.20-1.0.0
+
+* Upgrade to Kotlin 1.8.0, depends on the fork maintained by [ZacSweers](https://github.com/ZacSweers/kotlin-compile-testing).
+
+### 1.8.0.1
+
+
+
 ### 1.8.0.0
 
 * Upgrade to Kotlin 1.8.0, depends on the fork maintained by [ZacSweers](https://github.com/ZacSweers/kotlin-compile-testing).
