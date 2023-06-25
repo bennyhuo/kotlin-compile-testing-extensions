@@ -1,4 +1,4 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.bennyhuo.kotlin/kotlin-compile-testing-extensions.svg)](https://maven-badges.herokuapp.com/maven-central/com.bennyhuo.kotlin/kotlin-compile-testing-extensions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.bennyhuo.kotlin/kotlin-compile-testing-extensions/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.bennyhuo.kotlin/kotlin-compile-testing-extensions)
 
 
 # kotlin-compile-testing-extensions
