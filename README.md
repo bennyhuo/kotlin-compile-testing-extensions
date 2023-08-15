@@ -29,6 +29,11 @@ See the tests in [bennyhuo/Mixin](https://github.com/bennyhuo/Mixin/tree/master/
 
 ## ChangeLog
 
+### 1.8.20-1.1.0
+
+* Add 'ignoreTrailingSpaces' option to ignore the trailing whitespaces when comparing the test result.
+* Add 'TextBasedModuleInfoLoader' to make it possible to load the test sources from text.
+
 ### 1.8.20-1.0.0
 
 * Upgrade to Kotlin 1.8.20.

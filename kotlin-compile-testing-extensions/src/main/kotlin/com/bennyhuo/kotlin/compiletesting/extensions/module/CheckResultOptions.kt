@@ -43,5 +43,6 @@ class CheckResultOptions(
     val irSourceIndent: String = IR_OUTPUT_INDENT_DEFAULT,
     val checkCompilerOutput: Boolean = false,
     val compilerOutputName: String = "compiles.log",
-    val compilerOutputLevel: Int = COMPILER_OUTPUT_LEVEL_ERROR
+    val compilerOutputLevel: Int = COMPILER_OUTPUT_LEVEL_ERROR,
+    val ignoreTrailingSpaces: Boolean = true
 )

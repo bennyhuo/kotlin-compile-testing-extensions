@@ -97,10 +97,10 @@ fun Collection<KotlinModule>.checkResult(
             collector.collectModule(expectModuleInfo.name)
             expectModuleInfo.sourceFileInfos.forEach {
                 collector.collectFile(it.fileName)
-                collector.collectLine(it.content, resultMap[expectModuleInfo.name]?.get(it.fileName))
+                collector.collect(it.content, resultMap[expectModuleInfo.name]?.get(it.fileName))
             }
             collector
-        }.apply()
+        }.apply(options.ignoreTrailingSpaces)
     }
 }
 
@@ -116,7 +116,8 @@ fun KotlinModule.checkResult(
     irSourceIndent: String = IR_OUTPUT_INDENT_DEFAULT,
     checkCompilerOutput: Boolean = false,
     compilerOutputName: String = "compiles.log",
-    compilerOutputLevel: Int = COMPILER_OUTPUT_LEVEL_ERROR
+    compilerOutputLevel: Int = COMPILER_OUTPUT_LEVEL_ERROR,
+    ignoreTrailingSpaces: Boolean = true
 ) {
     listOf(this).checkResult(
         listOf(expectModuleInfo),
@@ -129,7 +130,8 @@ fun KotlinModule.checkResult(
         irSourceIndent,
         checkCompilerOutput,
         compilerOutputName,
-        compilerOutputLevel
+        compilerOutputLevel,
+        ignoreTrailingSpaces
     )
 }
 
@@ -145,7 +147,8 @@ fun Collection<KotlinModule>.checkResult(
     irSourceIndent: String = IR_OUTPUT_INDENT_DEFAULT,
     checkCompilerOutput: Boolean = false,
     compilerOutputName: String = "compiles.log",
-    compilerOutputLevel: Int = COMPILER_OUTPUT_LEVEL_ERROR
+    compilerOutputLevel: Int = COMPILER_OUTPUT_LEVEL_ERROR,
+    ignoreTrailingSpaces: Boolean = true
 ) {
     checkResult(
         expectModuleInfos,
@@ -159,7 +162,8 @@ fun Collection<KotlinModule>.checkResult(
             irSourceIndent,
             checkCompilerOutput,
             compilerOutputName,
-            compilerOutputLevel
+            compilerOutputLevel,
+            ignoreTrailingSpaces
         )
     )
 }

@@ -23,13 +23,13 @@ private const val ENTRY_PREFIX = "// ENTRY:"
 private const val DEFAULT_MODULE = "default-module"
 private const val DEFAULT_FILE = "DefaultFile.kt"
 
-@Deprecated("Use FileBasedModuleInfoLoader.", ReplaceWith("FileBasedModuleInfoLoader"))
-typealias SingleFileModuleInfoLoader = FileBasedModuleInfoLoader
+class FileBasedModuleInfoLoader(filePath: String) :
+    TextBasedModuleInfoLoader(File(filePath).readText())
 
-class FileBasedModuleInfoLoader(private val filePath: String) : ModuleInfoLoader {
+open class TextBasedModuleInfoLoader(private val text: String) : ModuleInfoLoader {
 
     private val lines by lazy {
-        File(filePath).readLines().dropWhile { it.trim() != SOURCE_START_LINE }
+        text.lines().dropWhile { it.trim() != SOURCE_START_LINE }
     }
 
     private val sourceLines by lazy {
