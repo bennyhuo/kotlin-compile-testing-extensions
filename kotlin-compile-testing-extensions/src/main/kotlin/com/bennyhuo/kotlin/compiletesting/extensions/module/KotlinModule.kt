@@ -25,7 +25,7 @@ class KotlinModule(
     val sourceFiles: List<SourceFile>,
     val entries: List<Entry>,
     val dependencyNames: List<String>,
-    val supportK2: Boolean = false,
+    val useK2: Boolean = false,
     componentRegistrars: Collection<ComponentRegistrar> = emptyList(),
     compilerPluginRegistrars: Collection<CompilerPluginRegistrar> = emptyList(),
     annotationProcessors: Collection<Processor> = emptyList(),
@@ -35,7 +35,7 @@ class KotlinModule(
 ) {
     constructor(
         sourceModuleInfo: SourceModuleInfo,
-        supportK2: Boolean = false,
+        useK2: Boolean = false,
         componentRegistrars: Collection<ComponentRegistrar> = emptyList(),
         compilerPluginRegistrars: Collection<CompilerPluginRegistrar> = emptyList(),
         annotationProcessors: Collection<Processor> = emptyList(),
@@ -47,7 +47,7 @@ class KotlinModule(
         },
         sourceModuleInfo.entries,
         sourceModuleInfo.dependencies,
-        supportK2,
+        useK2,
         componentRegistrars + sourceModuleInfo.componentRegistrars(),
         compilerPluginRegistrars + sourceModuleInfo.compilerPluginRegistrars(),
         annotationProcessors + sourceModuleInfo.annotationProcessors(),
@@ -115,7 +115,10 @@ class KotlinModule(
         compilation.annotationProcessors += annotationProcessors.distinctBy { it.javaClass }
         compilation.kaptArgs.putAll(kaptArgs)
 
-        compilation.supportsK2 = supportK2
+        compilation.supportsK2 = useK2
+        if (useK2) {
+            compilation.languageVersion = "2.0"
+        }
     }
 
     fun resolveDependencies(kotlinModuleMap: Map<String, KotlinModule>) {

@@ -33,7 +33,7 @@ class CompilerOutput(
     val outputs: List<CompilerOutputLine>
 ) {
 
-    fun filterOutputs(level: Int) = CompilerOutput(code, outputs.filter { it.levelInt == level })
+    fun filterOutputs(level: Int) = CompilerOutput(code, outputs.filter { it.levelInt >= level })
 
     fun errors() = filterOutputs(COMPILER_OUTPUT_LEVEL_ERROR)
     fun infos() = filterOutputs(COMPILER_OUTPUT_LEVEL_INFO)
