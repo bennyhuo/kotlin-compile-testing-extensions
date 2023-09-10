@@ -16,6 +16,8 @@ package com.bennyhuo.kotlin.compiletesting.extensions.ir
  * limitations under the License.
  */
 import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_INDENT_DEFAULT
+import java.util.Locale
+import kotlin.math.abs
 import org.jetbrains.kotlin.com.intellij.openapi.util.text.StringUtil
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
@@ -113,8 +115,6 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.resolve.descriptorUtil.isAnnotationConstructor
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.Printer
-import java.util.Locale
-import kotlin.math.abs
 
 /**
  * This is a copied from the Jetpack Compose compiler with a little optimization.
@@ -1126,9 +1126,10 @@ internal class JcIrSourcePrinter(
             }
         }
         print(" ")
-        if (declaration.superTypes.any { !it.isAny() }) {
+        val superTypesWithoutAny = declaration.superTypes.filter { !it.isAny() }
+        if (superTypesWithoutAny.isNotEmpty()) {
             print(": ")
-            print(declaration.superTypes.joinToString(", ") { it.renderSrc() })
+            print(superTypesWithoutAny.joinToString(", ") { it.renderSrc() })
             print(" ")
         }
         val nonParamDeclarations = declaration
@@ -1150,9 +1151,10 @@ internal class JcIrSourcePrinter(
             print(name)
             print(" ")
         }
-        if (superTypes.any { !it.isAny() }) {
+        val superTypesWithoutAny = superTypes.filter { !it.isAny() }
+        if (superTypesWithoutAny.isNotEmpty()) {
             print(": ")
-            print(superTypes.joinToString(", ") { it.renderSrc() })
+            print(superTypesWithoutAny.joinToString(", ") { it.renderSrc() })
             print(" ")
         }
         val printableDeclarations = declarations
