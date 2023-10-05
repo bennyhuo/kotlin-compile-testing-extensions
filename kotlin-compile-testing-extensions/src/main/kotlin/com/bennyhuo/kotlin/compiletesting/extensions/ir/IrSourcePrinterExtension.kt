@@ -3,6 +3,7 @@ package com.bennyhuo.kotlin.compiletesting.extensions.ir
 import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_INDENT_DEFAULT
 import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_TYPE_KOTLIN_LIKE
 import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_TYPE_KOTLIN_LIKE_JC
+import java.io.File
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.com.intellij.mock.MockProject
@@ -12,9 +13,9 @@ import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.name
+import org.jetbrains.kotlin.ir.declarations.path
 import org.jetbrains.kotlin.ir.util.dump
 import org.jetbrains.kotlin.ir.util.dumpKotlinLike
-import java.io.File
 
 /**
  * Created by benny.
@@ -32,11 +33,11 @@ internal class IrSourceOptions(
 @ExperimentalCompilerApi
 internal class IrSourcePrinterLegacyRegistrar(outputDir: File) : ComponentRegistrar {
 
+    private val extension = IrSourcePrinterExtension(outputDir)
+
     var isEnabled: Boolean = false
 
-    var options = IrSourceOptions()
-
-    private val extension = IrSourcePrinterExtension(outputDir, options)
+    var options by extension::options
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         if (isEnabled) {
@@ -48,11 +49,11 @@ internal class IrSourcePrinterLegacyRegistrar(outputDir: File) : ComponentRegist
 @ExperimentalCompilerApi
 internal class IrSourcePrinterRegistrar(outputDir: File) : CompilerPluginRegistrar() {
 
+    private val extension = IrSourcePrinterExtension(outputDir)
+
     var isEnabled: Boolean = false
 
-    var options = IrSourceOptions()
-
-    private val extension = IrSourcePrinterExtension(outputDir, options)
+    var options by extension::options
 
     override val supportsK2: Boolean = false
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
@@ -62,10 +63,9 @@ internal class IrSourcePrinterRegistrar(outputDir: File) : CompilerPluginRegistr
     }
 }
 
-internal class IrSourcePrinterExtension(
-    private val outputDir: File,
-    private val options: IrSourceOptions
-) : IrGenerationExtension {
+internal class IrSourcePrinterExtension(private val outputDir: File) : IrGenerationExtension {
+
+    var options: IrSourceOptions = IrSourceOptions()
 
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
         moduleFragment.files.forEach { irFile ->
@@ -81,7 +81,11 @@ internal class IrSourcePrinterExtension(
                         )
                     )
 
-                    else -> irFile.dump()
+                    else -> {
+                        val path = irFile.path
+                        val name = File(path).name
+                        irFile.dump().replace(path, name)
+                    }
                 }
 
                 resolve("${irFile.name}.ir").writeText(source)
