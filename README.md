@@ -5,7 +5,7 @@
 
 This is an extension of [tschuchortdev/kotlin-compile-testing](https://github.com/tschuchortdev/kotlin-compile-testing) by adding module support.
 
-If you want to test ksp or kapt processors on different modules, this library may help.
+If you want to test KAPT, KSP(Kotlin Symbol Processing) or KCP(Kotlin Compiler Plugin) on different modules, this library may help. 
 
 # How to use
 
@@ -25,7 +25,7 @@ dependencies {
 
 ## Examples
 
-See the tests in [bennyhuo/Mixin](https://github.com/bennyhuo/Mixin/tree/master/compiler/).
+See the tests in [kanyun-inc/Kace](https://github.com/kanyun-inc/Kace) and [kanyun-inc/Kudos](https://github.com/kanyun-inc/Kudos).
 
 ## ChangeLog
 
