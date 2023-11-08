@@ -7,6 +7,8 @@ This is an extension of [tschuchortdev/kotlin-compile-testing](https://github.co
 
 If you want to test KAPT, KSP(Kotlin Symbol Processing) or KCP(Kotlin Compiler Plugin) on different modules, this library may help. 
 
+>The original repository [tschuchortdev/kotlin-compile-testing](https://github.com/tschuchortdev/kotlin-compile-testing) is not up to date, I have replaced it with [ZacSweers/kotlin-compile-testing](https://github.com/ZacSweers/kotlin-compile-testing) since 1.8.0.
+
 # How to use
 
 ## Set up
@@ -29,36 +31,7 @@ See the tests in [kanyun-inc/Kace](https://github.com/kanyun-inc/Kace) and [kany
 
 ## ChangeLog
 
-### 1.8.20-1.1.0
-
-* Add 'ignoreTrailingSpaces' option to ignore the trailing whitespaces when comparing the test result.
-* Add 'TextBasedModuleInfoLoader' to make it possible to load the test sources from text.
-
-### 1.8.20-1.0.0
-
-* Upgrade to Kotlin 1.8.20.
-* Add support to add customized output files.
-
-### 1.8.0.1
-
-* Catch exceptions when running the testing code.
-
-### 1.8.0.0
-
-* Upgrade to Kotlin 1.8.0, depends on the fork maintained by [ZacSweers](https://github.com/ZacSweers/kotlin-compile-testing).
-* Fix compiler log pattern.
-* Add 'exitCode' parameter to 'checkResult'.
-* Add 'supportK2' to 'KotlinModule'.
-
-### 1.7.10.2
-
-* Add support to check module results.
-* Add support to check IR outputs.
-* Add support for JVM entry.
-
-### 1.7.10.1
-
-* Compatible with Java 8/Kotlin 1.7.10.
+See [Releases](https://github.com/bennyhuo/kotlin-compile-testing-extensions/releases).
 
 # License
 

@@ -1391,7 +1391,7 @@ private class KotlinLikeDumper(val p: Printer, val options: KotlinLikeDumpOption
         }
 
         printMemberAccessExpressionWithNoIndent(
-            referencedName.asString(), // effectively it's same as `symbol.owner.name.asString()`
+            (symbol.owner as IrDeclarationWithName).name.asString(),
             valueParameters,
             superQualifierSymbol = null,
             omitAllBracketsIfNoArguments = true,

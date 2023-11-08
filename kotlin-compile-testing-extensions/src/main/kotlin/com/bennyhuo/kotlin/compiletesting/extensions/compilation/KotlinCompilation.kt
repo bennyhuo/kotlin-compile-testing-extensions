@@ -2,6 +2,7 @@ package com.bennyhuo.kotlin.compiletesting.extensions.compilation
 
 import com.bennyhuo.kotlin.compiletesting.extensions.source.Entry
 import com.bennyhuo.kotlin.compiletesting.extensions.utils.captureStdOut
+import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import java.lang.reflect.Modifier
@@ -10,7 +11,7 @@ import java.lang.reflect.Modifier
  * Created by benny.
  */
 @OptIn(ExperimentalCompilerApi::class)
-fun KotlinCompilation.Result.runJvm(
+fun JvmCompilationResult.runJvm(
     entry: Entry,
     classLoader: ClassLoader = this.classLoader
 ): String {
