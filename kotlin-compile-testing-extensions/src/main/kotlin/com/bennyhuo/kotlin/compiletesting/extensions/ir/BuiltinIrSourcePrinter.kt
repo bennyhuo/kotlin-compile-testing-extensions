@@ -525,6 +525,7 @@ private class KotlinLikeDumper(val p: Printer, val options: KotlinLikeDumpOption
     }
 
     override fun visitSimpleFunction(declaration: IrSimpleFunction, data: IrDeclaration?) {
+        if (declaration.origin == IrDeclarationOrigin.FAKE_OVERRIDE) return
         declaration.printSimpleFunction(
             "fun ",
             declaration.name.asString(),
