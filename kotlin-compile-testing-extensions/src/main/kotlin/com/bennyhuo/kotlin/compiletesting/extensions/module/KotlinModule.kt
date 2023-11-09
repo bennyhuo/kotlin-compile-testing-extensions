@@ -7,6 +7,8 @@ import com.bennyhuo.kotlin.compiletesting.extensions.source.Entry
 import com.bennyhuo.kotlin.compiletesting.extensions.source.SourceModuleInfo
 import com.bennyhuo.kotlin.compiletesting.extensions.utils.readTextAndUnify
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.tschuchort.compiletesting.CompilationResult
+import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.kspArgs
@@ -76,7 +78,7 @@ class KotlinModule(
     var isCompiled = false
         private set
 
-    var compileResult: KotlinCompilation.Result? = null
+    var compileResult: JvmCompilationResult? = null
 
     val generatedSourceDirs: List<File> = listOfNotNull(
         compilation.kaptSourceDir,

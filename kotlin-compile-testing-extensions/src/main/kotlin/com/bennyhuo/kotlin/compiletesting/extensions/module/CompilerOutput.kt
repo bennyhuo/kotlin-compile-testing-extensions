@@ -1,5 +1,6 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.module
 
+import com.tschuchort.compiletesting.CompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import java.io.File
@@ -9,7 +10,7 @@ import java.io.File
 internal val compileLogPattern = Regex("""([iew]): .*[/\\](.*):(\d+):(\d+)? (.*)""")
 
 @ExperimentalCompilerApi
-fun KotlinCompilation.Result.parseOutput(): CompilerOutput {
+fun CompilationResult.parseOutput(): CompilerOutput {
     return CompilerOutput(exitCode, outputs = messages.parseOutput().toList())
 
 }

@@ -178,8 +178,8 @@ internal class JcIrSourcePrinter(
     }
 
     override fun visitPackageFragment(declaration: IrPackageFragment) {
-        if (declaration.fqName != FqName.ROOT) {
-            println("package ${declaration.fqName.asString()}")
+        if (declaration.packageFqName != FqName.ROOT) {
+            println("package ${declaration.packageFqName.asString()}")
             println()
         }
     }
@@ -1453,7 +1453,7 @@ internal class JcIrSourcePrinter(
             if (parent is IrDeclaration) {
                 parent.renderDeclarationFqn(sb)
             } else if (parent is IrPackageFragment) {
-                sb.append(parent.fqName.toString())
+                sb.append(parent.packageFqName.toString())
             }
         } catch (e: UninitializedPropertyAccessException) {
             sb.append("<uninitialized parent>")
