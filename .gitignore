@@ -6,3 +6,4 @@ captures
 .cxx
 .externalNativeBuild
 out
+.kotlin

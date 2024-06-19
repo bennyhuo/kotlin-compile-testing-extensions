@@ -12,6 +12,7 @@ import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import com.tschuchort.compiletesting.kspArgs
+import com.tschuchort.compiletesting.kspProcessorOptions
 import com.tschuchort.compiletesting.kspSourcesDir
 import com.tschuchort.compiletesting.symbolProcessorProviders
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
@@ -64,8 +65,8 @@ class KotlinModule(
 
     private val kspCompilation = if (symbolProcessorProviders.isNotEmpty()) {
         newCompilation {
-            this.symbolProcessorProviders = symbolProcessorProviders.distinctBy { it.javaClass }.toList()
-            this.kspArgs.putAll(kspArgs)
+            this.symbolProcessorProviders = symbolProcessorProviders.distinctBy { it.javaClass }.toMutableList()
+            this.kspProcessorOptions.putAll(kspArgs)
         }
     } else {
         null
