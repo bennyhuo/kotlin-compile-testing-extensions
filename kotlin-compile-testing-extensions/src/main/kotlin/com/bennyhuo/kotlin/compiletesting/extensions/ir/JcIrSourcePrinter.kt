@@ -80,6 +80,7 @@ import org.jetbrains.kotlin.ir.expressions.IrSetValue
 import org.jetbrains.kotlin.ir.expressions.IrSpreadElement
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.IrStringConcatenation
+import org.jetbrains.kotlin.ir.expressions.IrSyntheticBody
 import org.jetbrains.kotlin.ir.expressions.IrThrow
 import org.jetbrains.kotlin.ir.expressions.IrTry
 import org.jetbrains.kotlin.ir.expressions.IrTypeOperator
@@ -88,7 +89,6 @@ import org.jetbrains.kotlin.ir.expressions.IrValueAccessExpression
 import org.jetbrains.kotlin.ir.expressions.IrVararg
 import org.jetbrains.kotlin.ir.expressions.IrWhen
 import org.jetbrains.kotlin.ir.expressions.IrWhileLoop
-import org.jetbrains.kotlin.ir.expressions.impl.IrIfThenElseImpl
 import org.jetbrains.kotlin.ir.symbols.IrTypeAliasSymbol
 import org.jetbrains.kotlin.ir.types.IrDynamicType
 import org.jetbrains.kotlin.ir.types.IrErrorType
@@ -257,7 +257,7 @@ internal class JcIrSourcePrinter(
 
     fun IrFunction.printBody() {
         val body = body ?: return
-        if (body.statements.isEmpty()) {
+        if (body !is IrSyntheticBody && body.statements.isEmpty()) {
             println("{ }")
         } else {
             bracedBlock {
@@ -648,7 +648,7 @@ internal class JcIrSourcePrinter(
     override fun visitStringConcatenation(expression: IrStringConcatenation) {
         val arguments = expression.arguments
         val rawStringPreferred = arguments.mapNotNull {
-            (it as? IrConst<*>)?.value?.toString()?.rawStringPreferred()
+            (it as? IrConst)?.value?.toString()?.rawStringPreferred()
         }.let {
             it.isNotEmpty() && it.all { it }
         }
@@ -657,7 +657,7 @@ internal class JcIrSourcePrinter(
         print(quote)
         for (argument in arguments) {
             when {
-                argument is IrConst<*> && argument.kind == IrConstKind.String -> {
+                argument is IrConst && argument.kind == IrConstKind.String -> {
                     if (rawStringPreferred) {
                         print(argument.value.toString())
                     } else {
@@ -693,7 +693,7 @@ internal class JcIrSourcePrinter(
     }
 
     override fun visitWhen(expression: IrWhen) {
-        val isIf = expression.origin == IrStatementOrigin.IF || expression is IrIfThenElseImpl
+        val isIf = expression.origin == IrStatementOrigin.IF
         when {
             expression.origin == IrStatementOrigin.OROR -> {
                 val lhs = expression.branches[0].condition
@@ -711,11 +711,11 @@ internal class JcIrSourcePrinter(
             }
             isIf -> {
                 val singleLine = expression.branches.all {
-                    it.result is IrConst<*> || it.result is IrGetValue
+                    it.result is IrConst || it.result is IrGetValue
                 }
                 expression.branches.forEachIndexed { index, branch ->
                     val isElse = index == expression.branches.size - 1 &&
-                            (branch.condition as? IrConst<*>)?.value == true
+                            (branch.condition as? IrConst)?.value == true
                     when {
                         index == 0 -> {
                             print("if (")
@@ -757,7 +757,7 @@ internal class JcIrSourcePrinter(
                 print("when ")
                 bracedBlock {
                     expression.branches.forEach {
-                        val isElse = (it.condition as? IrConst<*>)?.value == true
+                        val isElse = (it.condition as? IrConst)?.value == true
 
                         if (isElse) {
                             print("else")
@@ -1027,7 +1027,7 @@ internal class JcIrSourcePrinter(
         return "${if (value < 0) "-" else ""}0b$result"
     }
 
-    override fun visitConst(expression: IrConst<*>) {
+    override fun visitConst(expression: IrConst) {
         val result = when (expression.kind) {
             is IrConstKind.Null -> "${expression.value}"
             is IrConstKind.Boolean -> "${expression.value}"
@@ -1485,7 +1485,7 @@ internal class JcIrSourcePrinter(
         when (irElement) {
             null -> append("<null>")
             is IrConstructorCall -> renderAsAnnotation(irElement)
-            is IrConst<*> -> {
+            is IrConst -> {
                 append('\'')
                 append(irElement.value.toString())
                 append('\'')
