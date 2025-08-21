@@ -1,13 +1,18 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     kotlin("jvm")
     id("com.vanniktech.maven.publish")
 }
 
-dependencies {
-    api("dev.zacsweers.kctfork:core:0.7.0")
-    api("dev.zacsweers.kctfork:ksp:0.7.0")
+group = property("GROUP").toString()
+version = property("VERSION_NAME").toString()
 
-    api("com.google.devtools.ksp:symbol-processing-api:2.1.0-1.0.29")
+dependencies {
+    api("dev.zacsweers.kctfork:core:0.8.0")
+    api("dev.zacsweers.kctfork:ksp:0.8.0")
+
+    api("com.google.devtools.ksp:symbol-processing-api:2.2.0-2.0.2")
 
     implementation(kotlin("test-common"))
     implementation(kotlin("test-annotations-common"))
@@ -16,4 +21,11 @@ dependencies {
 
 kotlin {
     jvmToolchain(8)
+    compilerOptions {
+        freeCompilerArgs.addAll(
+            "-opt-in=kotlin.RequiresOptIn",
+            "-Xmulti-dollar-interpolation"
+        )
+        jvmTarget.set(JvmTarget.JVM_1_8)
+    }
 }

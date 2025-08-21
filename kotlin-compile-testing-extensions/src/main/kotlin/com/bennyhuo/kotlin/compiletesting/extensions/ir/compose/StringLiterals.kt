@@ -1,4 +1,4 @@
-package com.bennyhuo.kotlin.compiletesting.extensions.ir
+package com.bennyhuo.kotlin.compiletesting.extensions.ir.compose
 
 import org.jetbrains.kotlin.com.intellij.openapi.util.text.StringUtil
 import java.util.LinkedList

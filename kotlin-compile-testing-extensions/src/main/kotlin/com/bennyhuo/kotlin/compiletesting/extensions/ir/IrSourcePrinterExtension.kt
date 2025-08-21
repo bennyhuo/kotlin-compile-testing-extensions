@@ -1,8 +1,11 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.ir
 
+import com.bennyhuo.kotlin.compiletesting.extensions.ir.compose.dumpSrc
 import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_INDENT_DEFAULT
 import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_TYPE_KOTLIN_LIKE
 import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_TYPE_KOTLIN_LIKE_JC
+import com.bennyhuo.kotlin.compiletesting.extensions.ir.builtin.KotlinLikeDumpOptions
+import com.bennyhuo.kotlin.compiletesting.extensions.ir.builtin.dumpKotlinLike
 import java.io.File
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
@@ -15,7 +18,6 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.name
 import org.jetbrains.kotlin.ir.declarations.path
 import org.jetbrains.kotlin.ir.util.dump
-import org.jetbrains.kotlin.ir.util.dumpKotlinLike
 
 /**
  * Created by benny.
@@ -77,7 +79,8 @@ internal class IrSourcePrinterExtension(private val outputDir: File) : IrGenerat
                         KotlinLikeDumpOptions(
                             printFileName = false,
                             printFilePath = false,
-                            indent = options.indent
+                            indent = options.indent,
+                            printFakeOverrideDeclarations = false
                         )
                     )
 
