@@ -40,6 +40,8 @@ import org.jetbrains.kotlin.name.SpecialNames
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.Printer
 import java.util.*
+import org.jetbrains.kotlin.com.intellij.openapi.util.text.StringUtil
+import org.jetbrains.kotlin.name.FqName
 
 fun IrElement.dumpSrc(indent: String = IR_OUTPUT_INDENT_DEFAULT, useFir: Boolean = false): String {
     val sb = StringBuilder()
@@ -119,9 +121,17 @@ class IrSourcePrinterVisitor(
         declaration.files.printJoin()
     }
 
+    override fun visitPackageFragment(declaration: IrPackageFragment) {
+        if (declaration.packageFqName != FqName.ROOT) {
+            println("package ${declaration.packageFqName.asString()}")
+            println()
+        }
+    }
+
     override fun visitFile(declaration: IrFile) {
         includeFileNameInExceptionTrace(declaration) {
 //          println("// FILE: ${declaration.fileEntry.name}")
+            visitPackageFragment(declaration)
             declaration.declarations.printJoin("\n")
         }
     }
@@ -670,22 +680,35 @@ class IrSourcePrinterVisitor(
 
     override fun visitStringConcatenation(expression: IrStringConcatenation) {
         val arguments = expression.arguments
-        print("\"")
-        for (arg in arguments) {
+        val rawStringPreferred = arguments.mapNotNull {
+            (it as? IrConst)?.value?.toString()?.rawStringPreferred()
+        }.let {
+            it.isNotEmpty() && it.all { it }
+        }
+
+        val quote = if (rawStringPreferred) "\"\"\"" else "\""
+        print(quote)
+        for (argument in arguments) {
             when {
-                arg is IrConst && arg.kind == IrConstKind.String -> print(arg.value)
-                arg is IrGetValue -> {
+                argument is IrConst && argument.kind == IrConstKind.String -> {
+                    if (rawStringPreferred) {
+                        print(argument.value.toString())
+                    } else {
+                        print(argument.value.toString().escapeCharacters())
+                    }
+                }
+                argument is IrGetValue -> {
                     print("$")
-                    arg.print()
+                    argument.print()
                 }
                 else -> {
                     print("\${")
-                    arg.print()
+                    argument.print()
                     print("}")
                 }
             }
         }
-        print("\"")
+        print(quote)
     }
 
     override fun visitVararg(expression: IrVararg) {
@@ -1097,7 +1120,14 @@ class IrSourcePrinterVisitor(
             is IrConstKind.Long -> "${expression.value}L"
             is IrConstKind.Float -> "${expression.value}f"
             is IrConstKind.Double -> "${expression.value}"
-            is IrConstKind.String -> "\"${expression.value}\""
+            is IrConstKind.String -> {
+                val value = expression.value.toString()
+                if (value.rawStringPreferred() == true) {
+                    "\"\"\"$value\"\"\""
+                } else {
+                    "\"${StringUtil.escapeCharCharacters(expression.value.toString())}\""
+                }
+            }
         }
         print(result)
     }
@@ -1171,9 +1201,10 @@ class IrSourcePrinterVisitor(
             }
         }
         print(" ")
-        if (declaration.superTypes.any { !it.isAny() }) {
+        val superTypesWithoutAny = declaration.superTypes.filter { !it.isAny() }
+        if (superTypesWithoutAny.isNotEmpty()) {
             print(": ")
-            print(declaration.superTypes.joinToString(", ") { it.renderSrc() })
+            print(superTypesWithoutAny.joinToString(", ") { it.renderSrc() })
             print(" ")
         }
         val nonParamDeclarations = declaration
@@ -1195,9 +1226,10 @@ class IrSourcePrinterVisitor(
             print(name)
             print(" ")
         }
-        if (superTypes.any { !it.isAny() }) {
+        val superTypesWithoutAny = superTypes.filter { !it.isAny() }
+        if (superTypesWithoutAny.isNotEmpty()) {
             print(": ")
-            print(superTypes.joinToString(", ") { it.renderSrc() })
+            print(superTypesWithoutAny.joinToString(", ") { it.renderSrc() })
             print(" ")
         }
         val printableDeclarations = declarations
