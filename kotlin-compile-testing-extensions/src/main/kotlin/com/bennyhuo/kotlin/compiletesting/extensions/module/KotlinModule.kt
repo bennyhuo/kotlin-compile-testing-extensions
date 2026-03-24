@@ -1,26 +1,22 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.module
 
 import com.bennyhuo.kotlin.compiletesting.extensions.compilation.runJvm
-import com.bennyhuo.kotlin.compiletesting.extensions.ir.IrSourcePrinterLegacyRegistrar
 import com.bennyhuo.kotlin.compiletesting.extensions.ir.IrSourcePrinterRegistrar
 import com.bennyhuo.kotlin.compiletesting.extensions.source.Entry
 import com.bennyhuo.kotlin.compiletesting.extensions.source.SourceModuleInfo
 import com.bennyhuo.kotlin.compiletesting.extensions.utils.readTextAndUnify
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
-import com.tschuchort.compiletesting.CompilationResult
 import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import com.tschuchort.compiletesting.kspArgs
 import com.tschuchort.compiletesting.kspProcessorOptions
 import com.tschuchort.compiletesting.kspSourcesDir
 import com.tschuchort.compiletesting.symbolProcessorProviders
-import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
-import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
-import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import java.io.File
 import java.net.URLClassLoader
 import javax.annotation.processing.Processor
+import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 
 @ExperimentalCompilerApi
 class KotlinModule(
@@ -28,8 +24,6 @@ class KotlinModule(
     val sourceFiles: List<SourceFile>,
     val entries: List<Entry>,
     val dependencyNames: List<String>,
-    val useK2: Boolean = false,
-    componentRegistrars: Collection<ComponentRegistrar> = emptyList(),
     compilerPluginRegistrars: Collection<CompilerPluginRegistrar> = emptyList(),
     annotationProcessors: Collection<Processor> = emptyList(),
     kaptArgs: Map<String, String> = emptyMap(),
@@ -38,8 +32,6 @@ class KotlinModule(
 ) {
     constructor(
         sourceModuleInfo: SourceModuleInfo,
-        useK2: Boolean = false,
-        componentRegistrars: Collection<ComponentRegistrar> = emptyList(),
         compilerPluginRegistrars: Collection<CompilerPluginRegistrar> = emptyList(),
         annotationProcessors: Collection<Processor> = emptyList(),
         symbolProcessorProviders: Collection<SymbolProcessorProvider> = emptyList()
@@ -50,8 +42,6 @@ class KotlinModule(
         },
         sourceModuleInfo.entries,
         sourceModuleInfo.dependencies,
-        useK2,
-        componentRegistrars + sourceModuleInfo.componentRegistrars(),
         compilerPluginRegistrars + sourceModuleInfo.compilerPluginRegistrars(),
         annotationProcessors + sourceModuleInfo.annotationProcessors(),
         sourceModuleInfo.kaptArgs,
@@ -96,32 +86,15 @@ class KotlinModule(
 
     val irTransformedSourceDir: File = compilation.workingDir.resolve("ir")
 
-    internal val sourcePrinterLegacy = IrSourcePrinterLegacyRegistrar(irTransformedSourceDir)
     internal val sourcePrinter = IrSourcePrinterRegistrar(irTransformedSourceDir)
 
     init {
-        if (componentRegistrars.isNotEmpty()) {
-            compilation.componentRegistrars += componentRegistrars.distinctBy { it.javaClass } + sourcePrinterLegacy
-        }
-
         if (compilerPluginRegistrars.isNotEmpty()) {
             compilation.compilerPluginRegistrars += compilerPluginRegistrars.distinctBy { it.javaClass } + sourcePrinter
-
-            // This is a workaround to make compilerPluginRegistrars loaded by the compiler.
-            // See: https://github.com/ZacSweers/kotlin-compile-testing/pull/124
-            if (componentRegistrars.isEmpty()) {
-                compilation.componentRegistrars += sourcePrinterLegacy
-                sourcePrinterLegacy.isEnabled = false
-            }
         }
 
         compilation.annotationProcessors += annotationProcessors.distinctBy { it.javaClass }
         compilation.kaptArgs.putAll(kaptArgs)
-
-        compilation.supportsK2 = useK2
-        if (useK2) {
-            compilation.languageVersion = "2.0"
-        }
     }
 
     fun resolveDependencies(kotlinModuleMap: Map<String, KotlinModule>) {

@@ -7,7 +7,7 @@ tasks.withType<JavaCompile> {
 }
 
 dependencies {
-    api("org.jetbrains.kotlin:kotlin-stdlib:1.6.10")
+    api("org.jetbrains.kotlin:kotlin-stdlib:2.3.0")
 
     api("org.slf4j:slf4j-api:1.7.25")
     api("ch.qos.logback:logback-core:1.3.0-alpha10")

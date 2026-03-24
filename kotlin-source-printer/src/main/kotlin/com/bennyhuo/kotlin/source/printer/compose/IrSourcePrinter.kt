@@ -16,10 +16,9 @@
 
 @file:OptIn(UnsafeDuringIrConstructionAPI::class)
 
-package com.bennyhuo.kotlin.compiletesting.extensions.ir.compose
+package com.bennyhuo.kotlin.source.printer.compose
 
-import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_INDENT_DEFAULT
-import com.bennyhuo.kotlin.compiletesting.extensions.ir.compose.firstParameterOfKind
+import com.bennyhuo.kotlin.source.printer.common.IR_OUTPUT_INDENT_DEFAULT
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.IrBuiltIns
@@ -271,7 +270,8 @@ class IrSourcePrinterVisitor(
                         when (fn.name.asString()) {
                             "equals",
                             "EQEQ",
-                            "EQEQEQ" -> {
+                            "EQEQEQ", 
+                                -> {
                                 val prevIsInNotCall = isInNotCall
                                 isInNotCall = true
                                 arg.print()
@@ -313,7 +313,8 @@ class IrSourcePrinterVisitor(
                 // no names for
                 "invoke", "get", "set" -> ""
                 "iterator", "hasNext", "next", "getValue", "setValue",
-                "noWhenBranchMatchedException" -> name
+                "noWhenBranchMatchedException", 
+                    -> name
                 "dataClassArrayMemberToString", "dataClassArrayMemberHashCode" -> name
                 "CHECK_NOT_NULL" -> "!!"
                 "THROW_ISE" -> "throw IllegalStateException()"
@@ -323,7 +324,8 @@ class IrSourcePrinterVisitor(
             val printBinary = when (name) {
                 "equals",
                 "EQEQ",
-                "EQEQEQ" -> {
+                "EQEQEQ", 
+                    -> {
                     expression.argumentForKind(IrParameterKind.DispatchReceiver)?.type?.isInt() == true ||
                             expression.argumentForKind(IrParameterKind.ExtensionReceiver)?.type?.isInt() == true ||
                             function.namedParameters.let {
@@ -383,20 +385,21 @@ class IrSourcePrinterVisitor(
                 }
                 // builtin static operators
                 "greater", "less", "lessOrEqual", "greaterOrEqual", "EQEQ", "EQEQEQ",
-                "ieee754equals" -> {
+                "ieee754equals",
+                    -> {
                     expression.arguments[0]?.print()
                     print(" $opSymbol ")
                     expression.arguments[1]?.print()
                 }
-                "iterator", "hasNext", "next",
-                "noWhenBranchMatchedException" -> {
+                "iterator", "hasNext", "next" -> {
                     expression.printReceiver()
                     print(".")
                     print(opSymbol)
                     print("()")
                 }
-                "THROW_ISE" -> {
+                "THROW_ISE", "noWhenBranchMatchedException" -> {
                     print(opSymbol)
+                    print("()")
                 }
                 "dataClassArrayMemberToString", "dataClassArrayMemberHashCode" -> {
                     print(opSymbol)
@@ -618,9 +621,13 @@ class IrSourcePrinterVisitor(
             }
             IrTypeOperator.NOT_INSTANCEOF -> {
                 expression.argument.print()
+                print(" !is ")
+                print(expression.type.renderSrc())
             }
             IrTypeOperator.CAST, IrTypeOperator.SAFE_CAST, IrTypeOperator.IMPLICIT_CAST -> {
                 expression.argument.print()
+                print(" as ")
+                print(expression.type.renderSrc())
             }
             IrTypeOperator.SAM_CONVERSION -> {
                 print(expression.type.renderSrc())
@@ -629,9 +636,12 @@ class IrSourcePrinterVisitor(
             }
             IrTypeOperator.IMPLICIT_NOTNULL -> {
                 expression.argument.print()
+                print("!!")
             }
             IrTypeOperator.INSTANCEOF -> {
                 expression.argument.print()
+                print(" is ")
+                print(expression.typeOperand.renderSrc())
             }
             else -> error("Unknown type operator: ${expression.operator}")
         }
@@ -1293,7 +1303,7 @@ class IrSourcePrinterVisitor(
     }
 
     override fun visitCatch(aCatch: IrCatch) {
-        print("<<CATCH>>")
+        aCatch.result.print()
     }
 
     override fun visitContainerExpression(expression: IrContainerExpression) {
@@ -1353,7 +1363,7 @@ class IrSourcePrinterVisitor(
         print(declaration.name)
         print(" by ")
         bracedBlock {
-            declaration.delegate.acceptVoid(this)
+            declaration.delegate?.acceptVoid(this)
             declaration.getter.scoped { it.printPropertyAccessor() }
             declaration.setter?.scoped { it.printPropertyAccessor(isSetter = true) }
         }
@@ -1408,7 +1418,9 @@ class IrSourcePrinterVisitor(
         println()
         if (aTry.catches.isNotEmpty()) {
             aTry.catches.forEach {
-                println("} catch() {")
+                print("} catch (")
+                print("${it.catchParameter.normalizedName}: ${printType(it.catchParameter.type)}")
+                println(") {")
                 indented {
                     it.print()
                 }
@@ -1459,32 +1471,11 @@ class IrSourcePrinterVisitor(
                 if (isMarkedNullable()) {
                     append('?')
                 }
-                abbreviation?.let {
-                    append(it.renderTypeAbbreviation())
-                }
             }
         }
 
     private inline fun buildTrimEnd(fn: StringBuilder.() -> Unit): String =
         buildString(fn).trimEnd()
-
-    private fun IrTypeAbbreviation.renderTypeAbbreviation(): String =
-        buildString {
-            append("{ ")
-            append(renderTypeAnnotations(annotations))
-            append(typeAlias.renderTypeAliasFqn())
-            if (arguments.isNotEmpty()) {
-                append(
-                    arguments.joinToString(prefix = "<", postfix = ">", separator = ", ") {
-                        it.renderTypeArgument()
-                    }
-                )
-            }
-            if (hasQuestionMark) {
-                append('?')
-            }
-            append(" }")
-        }
 
     private fun IrTypeArgument.renderTypeArgument(): String =
         when (this) {

@@ -2,7 +2,6 @@ package com.bennyhuo.kotlin.compiletesting.extensions.source
 
 import com.google.devtools.ksp.processing.SymbolProcessorProvider
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
-import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import javax.annotation.processing.Processor
 
@@ -27,8 +26,6 @@ class SourceModuleInfo(
     internal fun annotationProcessors() = annotationProcessors.instantiate<Processor>()
 
     internal fun symbolProcessorProviders() = symbolProcessorProviders.instantiate<SymbolProcessorProvider>()
-
-    internal fun componentRegistrars() = componentRegistrars.instantiate<ComponentRegistrar>()
 
     internal fun compilerPluginRegistrars() = compilerPluginRegistrars.instantiate<CompilerPluginRegistrar>()
 }

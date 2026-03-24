@@ -11,4 +11,4 @@ dependencyResolutionManagement {
     }
 }
 
-include(":sample",":kotlin-compile-testing-extensions")
+include(":sample",":kotlin-compile-testing-extensions", ":kotlin-source-printer")

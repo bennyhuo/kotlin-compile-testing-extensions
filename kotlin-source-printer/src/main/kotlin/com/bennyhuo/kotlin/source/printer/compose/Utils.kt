@@ -1,4 +1,4 @@
-package com.bennyhuo.kotlin.compiletesting.extensions.ir.compose
+package com.bennyhuo.kotlin.source.printer.compose
 
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.declarations.IrFile

@@ -4,6 +4,7 @@ import com.bennyhuo.kotlin.compiletesting.extensions.ir.IrSourceOptions
 import com.bennyhuo.kotlin.compiletesting.extensions.result.ResultCollector
 import com.bennyhuo.kotlin.compiletesting.extensions.source.ExpectModuleInfo
 import com.bennyhuo.kotlin.compiletesting.extensions.utils.readTextAndUnify
+import com.bennyhuo.kotlin.source.printer.common.IR_OUTPUT_INDENT_DEFAULT
 import com.tschuchort.compiletesting.KotlinCompilation
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import kotlin.test.assertEquals
@@ -49,9 +50,6 @@ fun Collection<KotlinModule>.checkResult(
             forEach {
                 it.sourcePrinter.isEnabled = true
                 it.sourcePrinter.options = IrSourceOptions(irOutputType, irSourceIndent)
-
-                it.sourcePrinterLegacy.isEnabled = true
-                it.sourcePrinterLegacy.options = IrSourceOptions(irOutputType, irSourceIndent)
             }
         }
 

@@ -1,17 +1,15 @@
 package com.bennyhuo.kotlin.compiletesting.extensions.ir
 
-import com.bennyhuo.kotlin.compiletesting.extensions.ir.compose.dumpSrc
-import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_INDENT_DEFAULT
 import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_TYPE_KOTLIN_LIKE
 import com.bennyhuo.kotlin.compiletesting.extensions.module.IR_OUTPUT_TYPE_KOTLIN_LIKE_JC
-import com.bennyhuo.kotlin.compiletesting.extensions.ir.builtin.KotlinLikeDumpOptions
-import com.bennyhuo.kotlin.compiletesting.extensions.ir.builtin.dumpKotlinLike
+import com.bennyhuo.kotlin.source.printer.builtin.KotlinLikeDumpOptions
+import com.bennyhuo.kotlin.source.printer.builtin.dumpKotlinLike
+import com.bennyhuo.kotlin.source.printer.common.IR_OUTPUT_INDENT_DEFAULT
+import com.bennyhuo.kotlin.source.printer.compose.dumpSrc
 import java.io.File
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
-import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
@@ -27,27 +25,6 @@ internal class IrSourceOptions(
     var indent: String = IR_OUTPUT_INDENT_DEFAULT
 )
 
-@Deprecated(
-    message = "IrSourcePrinterLegacyRegistrar is deprecated. Please use IrSourcePrinterRegistrar instead.",
-    replaceWith = ReplaceWith("IrSourcePrinterRegistrar"),
-    level = DeprecationLevel.WARNING
-)
-@ExperimentalCompilerApi
-internal class IrSourcePrinterLegacyRegistrar(outputDir: File) : ComponentRegistrar {
-
-    private val extension = IrSourcePrinterExtension(outputDir)
-
-    var isEnabled: Boolean = false
-
-    var options by extension::options
-
-    override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
-        if (isEnabled) {
-            IrGenerationExtension.registerExtension(project, extension)
-        }
-    }
-}
-
 @ExperimentalCompilerApi
 internal class IrSourcePrinterRegistrar(outputDir: File) : CompilerPluginRegistrar() {
 
@@ -58,6 +35,8 @@ internal class IrSourcePrinterRegistrar(outputDir: File) : CompilerPluginRegistr
     var options by extension::options
 
     override val supportsK2: Boolean = false
+    override val pluginId: String = "com.bennyhuo.kotlin.compiletesting.extensions.ir.IrSourcePrinterRegistrar"
+
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         if (isEnabled) {
             IrGenerationExtension.registerExtension(extension)
