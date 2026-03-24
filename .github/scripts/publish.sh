@@ -8,8 +8,10 @@ chmod +x ./gradlew
 
 if [[ "$publishVersion" != *"$snapshotSuffix"* ]]; then
   echo "auto release artifacts of ${publishVersion}"
-  ./gradlew publishAndReleaseToMavenCentral
+  ./gradlew :kotlin-source-printer:publishAndReleaseToMavenCentral
+  ./gradlew :kotlin-compile-testing-extensions:publishAndReleaseToMavenCentral 
 else
   echo "public artifacts of ${publishVersion}"
-  ./gradlew publishAllPublicationsToMavenCentral    
+  ./gradlew :kotlin-source-printer:publishAllPublicationsToMavenCentral    
+  ./gradlew :kotlin-compile-testing-extensions:publishAllPublicationsToMavenCentral 
 fi
