@@ -9,6 +9,7 @@ group = property("GROUP").toString()
 version = property("VERSION_NAME").toString()
 
 dependencies {
+    compileOnly("org.jetbrains.kotlin:kotlin-stdlib")
     compileOnly("org.jetbrains.kotlin:kotlin-compiler-embeddable")
 }
 
