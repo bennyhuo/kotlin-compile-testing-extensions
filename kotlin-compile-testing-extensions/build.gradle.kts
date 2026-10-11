@@ -9,10 +9,10 @@ group = property("GROUP").toString()
 version = property("VERSION_NAME").toString()
 
 dependencies {
-    api("dev.zacsweers.kctfork:core:0.12.0")
-    api("dev.zacsweers.kctfork:ksp:0.12.0")
+    api("dev.zacsweers.kctfork:core:0.13.0")
+    api("dev.zacsweers.kctfork:ksp:0.13.0")
 
-    api("com.google.devtools.ksp:symbol-processing-api:2.3.3")
+    api("com.google.devtools.ksp:symbol-processing-api:2.3.9")
     
     api(project(":kotlin-source-printer"))
 
