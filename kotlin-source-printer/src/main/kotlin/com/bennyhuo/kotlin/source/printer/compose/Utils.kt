@@ -53,4 +53,4 @@ fun IrExpression.unwrapLambda(): IrFunctionSymbol? = when {
 
 private val IrStatementOrigin?.isLambdaBlockOrigin: Boolean
     get() = isLambda || this == IrStatementOrigin.ADAPTED_FUNCTION_REFERENCE ||
-            this == IrStatementOrigin.SUSPEND_CONVERSION
+            this == IrStatementOrigin.FUNCTION_TYPE_EXPRESSION_CONVERSION
